@@ -1,11 +1,11 @@
-﻿<#
+<#
 	.SYNOPSIS
 		Tie the get-ResourceScrape.ps1 and process-ResourceScrape.ps1 utilities together
 	
 	.DESCRIPTION
 		This script will accept the subscriptionId, username and password parameters
 		and pass them to the get-ResourceScrape.ps1 utility. It will then monitor for
-        creation of the Resource Scrape file. Once detected, this script will launch
+		creation of the Resource Scrape file. Once detected, this script will launch
 		the process-ResourceScrape.ps1 utility. Once again, it will monitor for the
 		creation of the HTML and ACP files. Once detected, this script will zip all
 		the created files into a single compressed file for download by the Jenkins
@@ -20,6 +20,12 @@
 	.PARAMETER Password
 		A description of the Password parameter.
 	
+	.PARAMETER Verbose
+		Show the messages to the console
+	
+	.PARAMETER NoStamp
+		Do not attach the datetime stamp to the output folder and some files
+	
 	.NOTES
 		===========================================================================
 		Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2023 v5.8.232
@@ -29,7 +35,6 @@
 		Filename:     	control-AzureScrape
 		===========================================================================
 #>
-
 param
 (
 	[Parameter(Mandatory = $true,
@@ -46,7 +51,13 @@ param
 	[string]$Username,
 	[Parameter(Mandatory = $true)]
 	[Alias('p')]
-	[string]$Password
+	[string]$Password,
+	[Parameter(HelpMessage = 'Show the messages to the console')]
+	[Alias('v')]
+	[switch]$Verbose,
+	[Parameter(HelpMessage = 'Do not attach the datetime stamp to the output folder and some files')]
+	[Alias('n')]
+	[switch]$NoStamp
 )
 
 <#
