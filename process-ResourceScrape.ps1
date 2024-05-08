@@ -1,4 +1,4 @@
-﻿<#
+<#
 	.SYNOPSIS
 		A brief description of the  file.
 	
@@ -10,6 +10,18 @@
 	
 	.PARAMETER showHtml
 		If you want to view the HTML output automatically include the showHTML switch parameter
+	
+	.PARAMETER rulesfile
+		A description of the rulesfile parameter.
+	
+	.PARAMETER OutPath
+		Path to output files
+	
+	.PARAMETER Verbose
+		Show the messages to the console
+	
+	.PARAMETER NoStamp
+		Do not attach the datetime stamp to the output folder and some files
 	
 	.PARAMETER show-HTML
 		If you want to view the HTML output automatically include the show-HTML switch parameter
@@ -27,10 +39,21 @@ param
 (
 	[Parameter(Mandatory = $true)]
 	[Alias('f')]
-	$file,
+	[string]$file,
 	[Parameter(HelpMessage = 'If you want to view the HTML output automatically include the show-HTML switch parameter')]
 	[Alias('h')]
-	[switch]$showHtml
+	[switch]$showHtml,
+	[Alias('r')]
+	[string]$rulesFile,
+	[Parameter(HelpMessage = 'Path to output files')]
+	[Alias('o')]
+	[string]$OutPath,
+	[Parameter(HelpMessage = 'Show the messages to the console')]
+	[Alias('v')]
+	[switch]$Verbose,
+	[Parameter(HelpMessage = 'Do not attach the datetime stamp to the output folder and some files')]
+	[Alias('n')]
+	[switch]$NoStamp
 )
 
 $outRcd = ""
@@ -46,22 +69,39 @@ function Write-log {
 	[CmdletBinding()]
 	param
 	(
+		$id,
 		$msg,
 		[bool]$toConsole = $false
 	)
-	
-	# Define the log file name
-	$log = "$($outDir)\resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".log"
 	
 	# Get the Date/Time
 	$dte = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 	
 	# Write the message to the log file
-	Write-Output "$($dte) $($msg)" | Out-file $log -append
+	Write-Output "$($dte) (id:$($id)) $($msg)" | Out-file $log -append
 	
 	if ($toConsole) {
-		Write-Host "$($dte) $($msg)" | Out-file $log -append
+		Write-Host "$($dte) (id:$($id)) $($msg)"
 	}
+}
+
+function Show-Error {
+	[CmdletBinding()]
+	param
+	(
+		$id,
+		[Parameter(Mandatory = $true)]
+		$err
+	)
+	
+	$errTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+	$e = $err.Exception
+	$msg = $e.Message
+	while ($e.InnerException) {
+		$e = $e.InnerException
+		$msg += "`n" + $e.Message
+	}
+	Write-log -toConsole $Verbose -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 }
 
 function ConvertTo-IndentedHtmlList {
@@ -77,7 +117,6 @@ function ConvertTo-IndentedHtmlList {
 	$objProperties = $object | ConvertTo-Json | ConvertFrom-Json
 	
 	foreach ($property in $Object.PSObject.Properties) {
-#		$propertyName = "<button type='button' onclick='alert(`"Hello world!`")'><strong>&#10148;</strong></button>&nbsp;$($property.Name)"
 		$propertyName = "$($property.Name)"
 		$propertyValue = $property.Value
 		
@@ -147,7 +186,6 @@ function Add-propElement {
 	return $retProp
 }
 
-
 function Set-acp {
 	[CmdletBinding()]
 	param
@@ -157,154 +195,82 @@ function Set-acp {
 		$props
 	)
 	
-	# Read the Resources file into a variable
-	[xml]$rules = Get-Content -Path "rules.xml"
+	Write-log -toConsole $Verbose -id 67 -msg "Looking up rules for property: $($name).`n"
 	
-	# Find the row.ResourceType in the rules file
-	#	$rule = $rules | Select-Xml -XPath "//*[@type=$row.ResourceType]" | Select -ExpandProperty Node
-	$cnt=0
-	#	$rules.resources.resource | ForEach-Object {
-	for ($x = 0; $x -lt $rules.resources.resource.count; $x++) {
-		$rule = $rules.resources.resource[$x]
+	# verify that the rules file exists
+	if (Test-Path -Path $rulesFile -PathType Leaf) {
+		[xml]$rules = Get-Content -Path $rulesFile
 		
-#		if ($_.type -eq $row.ResourceType) {
-		if ($rule.type -eq $row.ResourceType) {
-			# Check to see if any properties exist for this rule
-#			if ($_.properties -ne $null) {
-			if ($rule.properties -ne $null) {
-				foreach ($node in $rule.properties) {
-					$doug = "me"
-					if ($node.provisioningState -eq $props.provisioningState) {
-						$acpName = ""
-						$acpNotName = ""
-						$acpNameType = $node.Name.type
-						$acpSkuName = ""
-						$acpNotSkuName = ""
-						$acpSkuNameType = $node.sku_Name.type
-						$acpSkuTier = ""
-						$acpNotSkuTier = ""
-						$acpSkuTierType = $node.sku_Tier.type
-						$acpSkuCap = ""
-						$acpNotSkuCap = ""
-						$acpSkuCapType = $node.sku_Capacity.type
-						$acpLocation = ""
-						$acpNotLocation = ""
-						$acpLocationType = $node.location.type
+		# Find the row.ResourceType in the rules file
+		$cnt = 0
+		for ($x = 0; $x -lt $rules.resources.resource.count; $x++) {
+			$rule = $rules.resources.resource[$x]
+			
+			if ($rule.type -eq $row.ResourceType) {
+				Write-log -toConsole $Verbose -id 68 -msg "Rule has been found for $($rule.type).`n"
+				# only process the rule if it has been enabled. Otherwise, ignore it
+				if ($rule.enabled -eq "true") {
+					Write-log -toConsole $Verbose -id 69 -msg "Rule is enabled.`n"
+					# Check to see if any properties exist for this rule
+					if ($rule.properties -ne $null) {
+						Write-log -toConsole $Verbose -id 70 -msg "This rule has properties.`n"
 						
-						# Name
-						$acpName = $node.Name.equal
-						$acpNotName = $node.Name.notequal
-						if ($acpName -eq "value") {
-							$arr = $node.Name.value.split(".")
-							$acpName = $props.($arr[0]).($arr[1])
-							if ($acpNotName -eq "value") {
-								$arr = $node.Name.notvalue.split(".")
-								$acpNotName = $node.Name.notvalue
+						$elem = "                {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
+						$elem += "`"$($rule.type)`"`n                        },`n"
+						for ($x = 0; $x -lt $rule.properties.field.count; $x++) {
+							if ((-not ($rule.properties.field.name -contains "provisioningstate")) -or ($rule.properties.field[0].value -match "Succeeded")) {
+								if (($x -eq 0) -and (($rule.properties.field[0].name -match "provisioningState") -and ($rule.properties.field[0].value -match "Succeeded"))) {
+									$x++
+								}
+								$elem += "                        {`n                            `"field`": `"$($rule.properties.field[$x].name)`"`n                            `"$($rule.properties.field[$x].func)`": "
+								
+								if ($rule.properties.field[$x].func -eq "in") {
+									# Format the list of values on separate lines
+									$elem += "[`n"
+									$arrValues = $rule.properties.field[$x].value.split(",")
+									for ($y = 0; $y -lt $arrValues.Count - 1; $y++) {
+										$outElem = $arrValues[$y]
+										if ($rule.properties.field[$x].valtype -eq "field") {
+											$splitElem = $arrValues[$y].split(".")
+											$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
+										}
+										$elem += "                                `"$($arrValues[$y])`",`n"
+									}
+									# Remove the last comma
+									$elem = $elem.Substring(0, $elem.Length - 1)
+									# close the list of values
+									$elem += "                            ]`n                        },`n"
+								} else {
+									$outElem = $rule.properties.field[$x].value
+									if ($rule.properties.field[$x].valtype -eq "field") {
+										$splitElem = $rule.properties.field[$x].value.split(".")
+										$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
+									}
+									$elem += "`"$($outElem)`"`n                        `},`n"
+								}
+								if (-not $arrElems.Contains($elem)) { [void]$arrElems.Add($elem) }
 							}
 						}
-						
-						# SKU Name
-						$acpSkuName = $node.sku_Name.equal
-						$acpNotSkuName = $node.Sku_Name.notequal
-						if ($acpSkuName -eq "value") {
-							$arr = $node.Sku_Name.value.split(".")
-							$acpSkuName = $props.($arr[0]).($arr[1])
-							if ($acpNotSkuName -eq "value") {
-								$arr = $node.Sku_Name.notvalue.split(".")
-								$acpNotSkuName = $props.($arr[0]).($arr[1])
-							}
-						}
-						
-						# SKU Tier
-						$acpSkuTier = $node.sku_Tier.equal
-						$acpNotSkuTier = $node.sku_Tier.notequal
-						if ($acpSkuTier -eq "value") {
-							$arr = $node.sku_Tier.value.split(".")
-							$acpSkuTier = $props.($arr[0]).($arr[1])
-							if ($acpNotSkuTier -eq "value") {
-								$arr = $node.sku_Tier.notvalue.split(".")
-								$acpNotSkuTier = $props.($arr[0]).($arr[1])
-							}
-						}
-						
-						# SKU Capacity
-						$acpSkuCap = $node.sku_Capacity.equal
-						$acpNotSkuCap = $node.sku_Capacity.notequal
-						if ($acpSkuCap -eq "value") {
-							$arr = $node.sku_Capacity.value.split(".")
-							$acpSkuCap = $props.($arr[0]).($arr[1])
-							if ($acpNotSkuCap -eq "value") {
-								$arr = $node.sku_Capacity.notvalue.split(".")
-								$acpNotSkuCap = $props.($arr[0]).($arr[1])
-							}
-						}
-						
-						# Location
-						$acpLocation = $node.Location.equal
-						$acpNotLocation = $node.Location.notequal
-						if ($acpLocation -eq "value") {
-							$arr = $node.Location.value.split(".")
-							$acpLocation = $props.($arr[0]).($arr[1])
-							if ($acpNotLocation -eq "value") {
-								$arr = $node.Location.notvalue.split(".")
-								$acpNotLocation = $props.($arr[0]).($arr[1])
-							}
-						}
-						# Add the element with Properties
-						$elem = "{`n    {`n        `"allOf`": [`n            {`n                `"field`": `"type`",`n                `"equals`": `""
-						$elem += "$($rule.type)`"`n            }"
-						
-						if (-not [string]::IsNullOrEmpty($acpName)) {
-							$elem += Add-propElement -name $acpName -type $acpNameType -field "name"
-						}
-						if (-not [string]::IsNullOrEmpty($acpNotName)) {
-							$elem += Add-propElement -name $acpNotName -type "notEquals" -field "name"
-						}
-						if (-not [string]::IsNullOrEmpty($acpSkuName)) {
-							$elem += Add-propElement -name $acpSkuName -type $acpSkuNameType -field "Microsoft.Compute/virtualMachines/sku.name"
-						}
-						if (-not [string]::IsNullOrEmpty($acpNotSkuName)) {
-							$elem += Add-propElement -name $acpNotSkuName -type "notEquals" -field "Microsoft.Compute/virtualMachines/sku.name"
-						}
-						if (-not [string]::IsNullOrEmpty($acpSkuTier)) {
-							$elem += Add-propElement -name $acpSkuTier -type $acpSkuTierType -field "Microsoft.Compute/virtualMachines/sku.tier"
-						}
-						if (-not [string]::IsNullOrEmpty($acpNotSkuTier)) {
-							$elem += Add-propElement -name $acpNotSkuTier -type "notEquals" -field "Microsoft.Compute/virtualMachines/sku.tier"
-						}
-						if (-not [string]::IsNullOrEmpty($acpSkuCap)) {
-							$elem += Add-propElement -name $acpSkuCap -type $acpSkuCapType -field "Microsoft.Compute/virtualMachines/sku.Capacity"
-						}
-						if (-not [string]::IsNullOrEmpty($acpNotSkuCap)) {
-							$elem += Add-propElement -name $acpNotSkuCap -type "notEquals" -field "Microsoft.Compute/virtualMachines/sku.Capacity"
-						}
-						if (-not [string]::IsNullOrEmpty($acpLocation)) {
-							$elem += Add-propElement -name $acpLocation -type $acpLocationType -field "location"
-						}
-						if (-not [string]::IsNullOrEmpty($acpNotLocation)) {
-							$elem += Add-propElement -name $acpNotLocation -type "notEquals" -field "location"
-						}
-						$elem += "`n        ]`n    }"
-#						if (-not $propElems.Contains($elem)) { $propElems.Add($elem) }
-						if (-not $arrElems.Contains($elem)) { [void]$arrElems.Add($elem) }
+						$elem = $elem.Substring(0, $elem.LastIndexOf(","))
+						$elem += "`n                    ]`n                },`n"
+					} else {
+						# Add the element without properties
+						Write-log -toConsole $Verbose -id 70 -msg "This rule does not have properties.`n"
+						if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
 					}
+					
+					break
 				}
-			} else {
-#				$elem = "`n    {`n        `"field`": `"type`",`n        `"equals`": `"$($rule.type)`"`n    }"
-				#				if (-not $actElems.Contains($elem)) { $actElems.Add($elem) }
-				
-				# Add the element without properties
-				if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
-#				if (-not $arrElems.Contains($rule.type)) { $arrElems.Add($rule.type) }
-#				if (-not $arrElems.Contains($elem)) { [void]$arrElems.Add($elem) }
 			}
-			break
 		}
+	} else {
+		Write-log -toConsole $Verbose -id 9 -msg "ERROR: Could not find the rules file. File: $($rules)`n"
+		$elem = ""
 	}
 	
-	return $arrElems
+	#	return $arrElems
+	return $elem
 }
-
 
 function Build-Body {
 	[CmdletBinding()]
@@ -328,7 +294,6 @@ function Build-Body {
 			$retVal += "    <td>$($object.Location)</td>`n"
 			$retVal += "    <td>$($object.ResourceGroupName)</td>`n"
 			$retVal += "    <td>$($object.ResourceType)</td>`n"
-			#			$htmlTable += "    <td align=right style='background-color: #ffffff;'><button type='button' id='elem' onclick='alert(`"Hello Resource!`")'>&#10148;</button></td>`n"
 			$retVal += "    <td align=right style='background-color: #ffffff;'>&nbsp</td>`n"
 			$retVal += "  </tr>`n"
 			
@@ -383,18 +348,61 @@ function Build-Body {
 #####################################
 
 # Script Version
-$myVer = "1.0.3"
+$myVer = "1.1.0"
+
+# Set the Start Time
+$startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+$timeId = Get-Date -Format "yyyyMMddHHmmss"
 
 # Get the directory path and file name without extension
 $inFile = Split-Path $file -leaf
 $dir = Split-Path -Path $file -Parent
 $noExt = [System.IO.Path]::GetFileNameWithoutExtension($File)
 
-Write-Host "`nprocess-ResourceScrape.ps1 Version: $($myVer)"
-Write-Host "File: $($infile)"
+# Get the script directory
+$scriptDir = $PSScriptRoot
+
+# Set up the output directory
+if ([string]::IsNullOrEmpty($OutPath)) {
+	$outDir = "$($scriptDir)\output"
+} else {
+	$outDir = "$($OutPath)\output"
+}
+
+# Add the Time ID to the outDir if requested
+if (-not ($NoStamp)) { $outDir = "$($outDir)_$($timeId)" }
+
+# Create the output directory if it doesn't exist
+if (-not (Test-Path -Path $outDir -PathType Container)) {
+	New-Item -ItemType Directory -Force -Path $outDir
+}
+
+# Define the log file name
+$log = "$($outDir)\resourceProcessor"
+if (-not ($NoStamp)) { $log = "$($log)_$($timeId)" }
+$log = "$($log).log"
+
+# Write the program version to the log file/screen
+Write-log -toConsole $Verbose -id 55 -msg "process-ResourceScrape.ps1 Version: $($myVer)"
+Write-log -toConsole $Verbose -id 57 -msg "Input File: $($inFile)"
+
+#Write-Host "`nprocess-ResourceScrape.ps1 Version: $($myVer)"
+#Write-Host "File: $($infile)"
+
+# Test for the existence of the Rules file
+if (-not ([string]::IsNullOrEmpty($rulesFile))) {
+	if (-not (Test-Path -Path $rulesFile -PathType Leaf)) {
+		$rulesFile = "rules.xml"
+	}
+} else {
+	$rulesFile = "rules.xml"
+}
+Write-log -toConsole $Verbose -id 58 -msg "Using Rules File: $($rulesFile)"
+#	[xml]$rules = Get-Content -Path "C:\Users\WayneKlapwyk\OneDrive - Skillable\Documents\A - Lab Ops\OKRs\2024\Automate ACP\GitRepo\processScrape\rules.xml"
 
 if (Test-Path $file -PathType Leaf) {
-	Write-Host "`nFile Found. Processing... `n"
+#	Write-Host "`nFile Found. Processing... `n"
+	Write-log -toConsole $Verbose -id 59 -msg "Input File Found. Continuing... `n"
 	
 	# Read the JSON file Resource Scrape
 	$jsonScrape = Get-Content -Path $File -Raw
@@ -405,54 +413,58 @@ if (Test-Path $file -PathType Leaf) {
 	$sortObjects = $jsonObjects.Resources | Sort-Object -Property "Name"
 	
 	# Start building the HTML table markup
-#	$htmlTable = "`n<table id='resTable' style='width:800px'><thead><tr>`n"
 	$htmlTable = "`n<table id='resTable' style='width:800px'>`n"
 	
 #	# Get the property names from the first object to use as table headers
 	$headers = "","Name","Location","Resource Group","Resource Type",""
 	
 	# Add table headers
+	Write-log -toConsole $Verbose -id 61 -msg "Adding Table headers`n"
 	$htmlTable += (Add-headers -listHeaders $headers)
 	$htmlTable += "`n<tbody>`n"
 	
 	# Add table rows
+	Write-log -toConsole $Verbose -id 62 -msg "Building the report body`n"
 	$htmlTable += (Build-Body -rowData $sortObjects)
 	
 	# Build the final initial ACP suggestion
+	Write-log -toConsole $Verbose -id 63 -msg "Building the initial ACP suggestion`n"
+	$group = ""
 	$typeElems = $typeElems | Sort-Object
 	if ($typeElems.Count -gt 0) {
 		if ($outElems.Count -eq 0) {
-			$group = "{`n    {`n        `"field`": `"type`",`n        `"in`": [`n"
+			$group = "    {`n    {`n            `"field`": `"type`",`n            `"in`": [`n"
 		} else {
-			$group = ",`n    {`n        `"field`": `"type`",`n        `"in`": [`n"
+			$group = "`n                {`n                    `"field`": `"type`",`n                    `"in`": [`n"
 		}
 		for ($x = 0; $x -lt $typeElems.Count; $x++) {
-			$group += "            `"$($typeElems[$x])`""
+			$group += "                        `"$($typeElems[$x])`""
 			if ($x -eq ($typeElems.Count - 1)) {
 				$group += "`n"
 			} else {
 				$group += ",`n"
 			}
 		}
-		
 	}
-	
 	
 	# Add the final Type Group to the ACP suggestion
-	if ($group.count -eq 0) {
-		
-	}
-	[void]$outElems.Add($group)
-	[void]$outElems.Add("        ]`n    },`n    `"then`": {`n        `"effect`": `"Deny`"`n    }`n}")
+	if ($group.Length -gt 0) { [void]$outElems.Add($group) }
+	[void]$outElems.Add("                    ]`n                }`n            ]`n        }`n    },`n    `"then`": {`n        `"effect`": `"Deny`"`n    }`n}")
+	# Add the opening "If" statement to the outElems array
+	[void]$outElems.Insert(0, "{`n    `"if`": {`n        `"not`": {`n            `"anyOf`": [`n")
 	
 	# Construct the output file path with the new extension
-	if ([string]::IsNullOrEmpty($dir)) { $dir = "." }
-	$outFile = Join-Path -Path $dir -ChildPath "$($noExt).html"
-	$outACP = (Join-Path -Path $dir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
+	Write-log -toConsole $Verbose -id 64 -msg "Defining the output files and paths`n"
+#	if ([string]::IsNullOrEmpty($dir)) { $dir = "." }
+#	$outFile = Join-Path -Path $dir -ChildPath "$($noExt).html"
+#	$outACP = (Join-Path -Path $dir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
+	$outFile = Join-Path -Path $outDir -ChildPath "$($noExt).html"
+	$outACP = (Join-Path -Path $outDir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
 	$outACP += ".json"
 	$inACPFile = Split-Path $outACP -leaf
 	
 	# Define the HTML document content
+	Write-log -toConsole $Verbose -id 65 -msg "Assembling the HTML document`n"
 	$htmlDocument = @"
 <!DOCTYPE html>
 <html lang='en'>
@@ -499,7 +511,7 @@ $htmlTable
 <td style='width:800px'>
     <strong>Download Initial ACP&nbsp;&nbsp;-&nbsp;&nbsp;<a href="$outACP" download>$inACPFile</a></strong><br>
     <strong>ACP Documentation</strong>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;<a href="https://docs.learnondemandsystems.com/lod/acp-creation-process.md" target="_blank">ACP Documentation</a><br>
-    <textarea id="initialACP" name="initialACP" rows="50" cols="100" onkeyup="textAreaAdjust(this)" style="overflow:hidden">$outElems</textarea><br>
+    <textarea id="initialACP" name="initialACP" rows="50" cols="100" onkeyup="textAreaAdjust(this)" style="overflow:hidden; overflow-y:scroll;">$outElems</textarea><br>
 	<strong>Supported ACP Conditions</strong><br>
 <ul>
 <li>"equals": "stringValue"</li>
@@ -570,10 +582,10 @@ for (var i = 0; i < rows.length; i++) {
 </html>
 "@
 	
-
+	Write-log -toConsole $Verbose -id 66 -msg "Writing out the HTML file and initial ACP file`n"
+	
 	# Save the HTML document to a file
 	$htmlDocument | Out-File -FilePath $outFile -Encoding UTF8
-	
 	
 	# Save the initial ACP to a file
 	$outElems| Out-File -FilePath $outACP -Encoding UTF8
@@ -583,7 +595,8 @@ for (var i = 0; i < rows.length; i++) {
 		Invoke-Item $outFile
 	}
 } else {
-	Write-Host "Input file path is required. Please try again."
+	Write-log -toConsole $Verbose -id 10 -msg "Input file path is required. Please try again.`n"
+#	Write-Host "Input file path is required. Please try again."
 	throw "Invalid file or path. Please try again."
 	exit
 }
