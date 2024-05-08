@@ -1,4 +1,4 @@
-﻿<#
+<#
 	.SYNOPSIS
 		Build the Tenant-Based Input Parameters
 	
@@ -16,11 +16,14 @@
 	.PARAMETER Password
 		A description of the Password parameter.
 	
-	.PARAMETER LogToScreen
-		A description of the LogToScreen parameter.
-	
 	.PARAMETER OutPath
 		Path to output files
+	
+	.PARAMETER Verbose
+		Display all messages to the console
+	
+	.PARAMETER NoStamp
+		Do not attach the datetime stamp to the output folder and some files
 	
 	.NOTES
 		===========================================================================
@@ -52,19 +55,12 @@ param
 	[Alias('o')]
 	[string]$OutPath,
 	[Parameter(HelpMessage = 'Show the messages to the console')]
-	[Alias('l')]
-	[switch]$LogToScreen
+	[Alias('v')]
+	[switch]$Verbose,
+	[Parameter(HelpMessage = 'Do not attach the datetime stamp to the output folder and some files')]
+	[Alias('n')]
+	[switch]$NoStamp
 )
-
-<#
-	.DESCRIPTION
-		Ensure that the Az (Azure) powershell module is installed and available in the environment
-	
-	.EXAMPLE
-				PS C:\> Set-Environment
-	
-	.NOTES
-#>
 
 function Write-log {
 	[CmdletBinding()]
@@ -86,7 +82,6 @@ function Write-log {
 	}
 }
 
-
 function Show-Error {
 	[CmdletBinding()]
 	param
@@ -100,7 +95,7 @@ function Show-Error {
 	if ($err -eq "Auth") {
 		if (Test-Path -Path "$($outDir)\FlagFile.chk" -PathType Leaf) {
 			
-			Write-log -toConsole $LogToScreen -id $id -msg "Your Azure credentials have not been set up or have expired, please run Connect-AzAccount to set up your Azure credentials. SharedTokenCacheCredential authentication unavailable. Token acquisition failed. Ensure that you have authenticated with a developer tool that supports Azure single sign on.`n`nThe Lab has likely ended or is otherwise unavailable. Please wait while processing is completed."
+			Write-log -toConsole $Verbose -id $id -msg "Your Azure credentials have not been set up or have expired, please run Connect-AzAccount to set up your Azure credentials. SharedTokenCacheCredential authentication unavailable. Token acquisition failed. Ensure that you have authenticated with a developer tool that supports Azure single sign on.`n`nThe Lab has likely ended or is otherwise unavailable. Please wait while processing is completed."
 			Remove-Item -Path "$($outDir)\FlagFile.chk"
 		}
 	} else {
@@ -110,7 +105,7 @@ function Show-Error {
 			$e = $e.InnerException
 			$msg += "`n" + $e.Message
 		}
-		Write-log -toConsole $LogToScreen -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+		Write-log -toConsole $Verbose -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 	}
 }
 
@@ -125,18 +120,18 @@ function Set-Environment {
 	$retVal = $true
 	try	{
 		# Install the Azure PowerShell module (if you haven't already)
-		Write-log -toConsole $LogToScreen -id 50 -msg "Verifying the local Powershell Azure environment."
+		Write-log -toConsole $Verbose -id 50 -msg "Verifying the local Powershell Azure environment."
 #		Write-Host "Verifying the local Powershell Azure environment."
 		If (Get-Module -ListAvailable -Name Az)	{
 #			Write-Host "Checking availability of the Azure Az module"
 			Import-Module Az -ErrorAction Stop
 #			Write-Host "The Azure Az module is ready for use"
-			Write-log -toConsole $LogToScreen -id 51 -msg "The Azure Az module is ready for use"
+			Write-log -toConsole $Verbose -id 51 -msg "The Azure Az module is ready for use"
 		} else {
 #			Write-Host "This utility requires the use of the Azure Az Powershell module."
-			Write-log -toConsole $LogToScreen -id 52 -msg "This utility requires the use of the Azure Az Powershell module."
+			Write-log -toConsole $Verbose -id 52 -msg "This utility requires the use of the Azure Az Powershell module."
 #			Write-Host "Please install this module as an administrator before proceeding."
-			Write-log -toConsole $LogToScreen -id 53 -msg "Please install this module as an administrator before proceeding."
+			Write-log -toConsole $Verbose -id 53 -msg "Please install this module as an administrator before proceeding."
 ##			Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force
 ##			Import-Module -Name Az
 			
@@ -219,12 +214,7 @@ The get-ResourceScrape utility will now start gathering the resources from your 
 To stop this utility before the end of the lab, REMOVE the following File:
     $($inDir)\FlagFile.chk.
 "@
-	Write-log -toConsole $LogToScreen -id 54 -msg $msg
-#	Write-Host ""
-#	Write-Host "The get-ResourceScrape utility will now start gathering the resources from your subscription."
-#	Write-Host ""
-#	Write-Host "To stop this utility before the end of the lab, REMOVE the following File:"
-#	Write-Host "    $($inDir)\FlagFile.chk."
+	Write-log -toConsole $Verbose -id 54 -msg $msg
 	
 	# Create/overwrite the temporary output file with a blank default file
 	$hdr = @"
@@ -566,28 +556,7 @@ Full Resource Scrape file:    $($inDir)\$($inFilename)
 The get-ResourceScrape.ps1 utility has ended
 "@
 	
-	Write-log -toConsole $LogToScreen -id 55 -msg $msg
-#	Write-Host ""
-#	Write-Host "#####################################"
-#	Write-Host "# Processed Records                 "
-#	Write-Host "#-----------------------------------"
-#	Write-Host "# Total Number of passes:     $($script:cntPass)"
-#	Write-Host "# Total records examined:     $($script:cntRecords)"
-#	Write-Host "# Count of Unique Groups:     $($uniqueResourceGroupCount)"
-#	Write-Host "# Count of Unique Resources:  $($uniqueResourcesCount)"
-#	Write-Host "#####################################"
-#	Write-Host ""
-#	Write-Host "Start Time:     $($startTime)"
-#	Write-Host "End Time:       $($endTime)"
-#	Write-Host "Total Duration: $($dur.Hours):$($dur.Minutes):$($dur.Seconds)"
-#	Write-Host ""
-#	Write-Host "Full Resource Scrape file:    $($inDir)\$($inFilename)"
-#	Write-Host ""
-#	Write-Host "*NOTE: The Full Resource Scrape File may contain duplicate resources if the resource is modified during the lab."
-#	Write-Host ""
-#	Write-Host "#####################################"
-#	Write-Host "The get-ResourceScrape.ps1 utility has ended"
-#	Write-Host ""
+	Write-log -toConsole $Verbose -id 55 -msg $msg
 }
 
 
@@ -611,10 +580,13 @@ $scriptDir = $PSScriptRoot
 
 # Set up the output directory
 if ([string]::IsNullOrEmpty($OutPath)) {
-	$outDir = "$($scriptDir)\output_$($numDigits)_$($timeId)"
+	$outDir = "$($scriptDir)\output_$($numDigits)"
 } else {
-	$outDir = "$($OutPath)\output_$($numDigits)_$($timeId)"
+	$outDir = "$($OutPath)\output_$($numDigits)"
 }
+
+# Add the Time ID to the outDir if requested
+if (-not ($NoStamp)) { $outDir = "$($outDir)_$($timeId)"}
 
 # Create the output directory if it doesn't exist
 if (-not (Test-Path -Path $outDir -PathType Container)) {
@@ -622,10 +594,12 @@ if (-not (Test-Path -Path $outDir -PathType Container)) {
 }
 
 # Define the log file name
-$log = "$($outDir)\resourceScrape_$($timeId).log"
+$log = "$($outDir)\resourceScrape"
+if (-not ($NoStamp)) { $log = "$($log)_$($timeId)" }
+$log = "$($log).log"
 
 # Write the program version to the log file/screen
-Write-log -toConsole $LogToScreen -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer)"
+Write-log -toConsole $Verbose -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer)"
 
 if (Set-Environment -inDir $scriptDir) {
 	if (Access-AzAccount -inUser $Username -inPswd $Password -inSubs $SubscriptionId) {
@@ -646,7 +620,7 @@ if (Set-Environment -inDir $scriptDir) {
 			Show-Results -inDir "$($outDir)" -inFilename "$($fileNameDate)"
 		} else {
 			$errTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			Write-log -toConsole $LogToScreen -id 56 -msg "An error was encountered during the Resource Scrape process.`n$($_)"
+			Write-log -toConsole $Verbose -id 56 -msg "An error was encountered during the Resource Scrape process.`n$($_)"
 #			Write-Host "$($errTime)  An error was encountered during the Resource Scrape process."
 			
 			Show-Error -err $_ -id 8
