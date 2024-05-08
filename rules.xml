@@ -1,153 +1,346 @@
 <resources>
-	<resource type="Microsoft.alertsmanagement"></resource>
-	<resource type="Microsoft.Compute/disks"></resource>
+	<resource type="Microsoft.alertsmanagement">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Compute/disks">
+		<enabled>true</enabled>
+    </resource>
 	<resource type="Microsoft.Compute/VirtualMachines">
+		<enabled>true</enabled>
 		<properties>
-			<provisioningState>Succeeded</provisioningState>
-			<name>
-				<type>equals</type>
-				<equal>value</equal>
-				<value>osProfile.computerName</value>
-				<notequal></notequal>
-				<notvalue></notvalue>
-			</name>
-			<sku_Name>
-				<type>equals</type>
-				<equal>value</equal>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>osProfile.computername</value>
+            </field>
+			<field>
+				<name>sku_Name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
 				<value>hardwareProfile.vmSize</value>
-				<notequal></notequal>
-			</sku_Name>
-			<sku_Tier></sku_Tier>
-			<sku_Capacity></sku_Capacity>
-			<location>
-				<type>equals</type>
-				<equal>[resourceGroup().location]</equal>
-				<notequal>global</notequal>
-			</location>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
 		</properties>
 	</resource>
-	<resource type="Microsoft.Compute/virtualMachines/extensions"></resource>
-	<resource type="Microsoft.ContainerRegistry/registries"></resource>
-	<resource type="Microsoft.Databricks"></resource>
-	<resource type="Microsoft.Insights/dataCollectionRules"></resource>
-	<resource type="Microsoft.EventHub"></resource>
-	<resource type="Microsoft.Fabric"></resource>
-	<resource type="Microsoft.Insights/autoscalesettings"></resource>
-	<resource type="Microsoft.Insights/components"></resource>
-	<resource type="Microsoft.Insights/dataCollectionRules"></resource>
-	<resource type="Microsoft.Logic/workflows"></resource>
-	<resource type="Microsoft.ManagedIdentity/userAssignedIdentities"></resource>
-	<resource type="Microsoft.Network"></resource>
-	<resource type="Microsoft.Network/applicationSecurityGroups"></resource>
-	<resource type="Microsoft.Network/azureFirwalls"></resource>
-	<resource type="Microsoft.Network/azureFirwalls/azureFirewallIpConfigurations"></resource>
-	<resource type="Microsoft.Network/azureFirwalls/networkRuleCollections"></resource>
-	<resource type="Microsoft.Network/azureFirwalls/applicationRuleCollections"></resource>
-	<resource type="Microsoft.Network/loadBalancers"></resource>
-	<resource type="Microsoft.Network/networkInterfaces"></resource>
-	<resource type="Microsoft.Network/networkSecurityGroups"></resource>
-	<resource type="Microsoft.Network/networkWatchers"></resource>
-	<resource type="Microsoft.Network/networkWatchers/flowlogs"></resource>
-	<resource type="Microsoft.Network/networkWatchers/connectionMonitors"></resource>
-	<resource type="Microsoft.Network/publicIPAddresses"></resource>
-	<resource type="Microsoft.Network/routeTables"></resource>
-	<resource type="Microsoft.Network/virtualNetworks"></resource>
+	<resource type="Microsoft.Compute/virtualMachines/extensions">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Compute/virtualMachineScaleSets">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+	        </field>
+			<field>
+				<name>sku_Name</name>
+				<func>in</func>
+				<valtype>literal</valtype>
+				<value>Standard_A1_V2,Standard_B1_V2,Standard_V2s,Standard_C1_V2,Standard_DS1_V2</value>
+            </field>
+			<field>
+				<name>virtualMachineProfile.storageProfile.imageReference.offer</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>aks</value>
+            </field>
+			<field>
+				<name>sku_capacity</name>
+				<func>lessOrEquals</func>
+				<valtype>literal</valtype>
+				<value>3</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
+    </resource>
+	<resource type="Microsoft.ContainerRegistry/registries">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Databricks">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Insights/dataCollectionRules">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.EventHub">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Fabric">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Insights/autoscalesettings">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Insights/components">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Insights/dataCollectionRules">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Logic/workflows">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.ManagedIdentity/userAssignedIdentities">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/applicationSecurityGroups">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/azureFirwalls">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/azureFirwalls/azureFirewallIpConfigurations">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/azureFirwalls/networkRuleCollections">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/azureFirwalls/applicationRuleCollections">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/loadBalancers">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/networkInterfaces">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/networkSecurityGroups">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/networkWatchers">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/networkWatchers/flowlogs">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/networkWatchers/connectionMonitors">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/publicIPAddresses">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/routeTables">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Network/virtualNetworks">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.OperationalInsights/workspaces">
+		<enabled>true</enabled>
 		<properties>
-			<provisioningState>Succeeded</provisioningState>
-			<name></name>
-			<sku_Name></sku_Name>
-			<sku_Tier></sku_Tier>
-			<sku_Capacity></sku_Capacity>
-			<location>
-				<type>equals</type>
-				<equal>[resourceGroup().location]</equal>
-				<notequal>global</notequal>
-			</location>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+            </field>
 		</properties>
 	</resource>
-	<resource type="Microsoft.OperationsManagement/solutions"></resource>
-	<resource type="Microsoft.ServiceFabric"></resource>
+	<resource type="Microsoft.OperationsManagement/solutions">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.ServiceFabric">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.Sql/servers">
+		<enabled>true</enabled>
 		<properties>
-			<provisioningState>Succeeded</provisioningState>
-			<name>
-				<type>contains</type>
-				<equal>value</equal>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
 				<value>[concat('mssql',resourcegroup().tags.LabInstance)]</value>
-				<notequal></notequal>
-			</name>
-			<sku_Name></sku_Name>
-			<sku_Tier></sku_Tier>
-			<sku_Capacity></sku_Capacity>
-			<location>
-				<type>notequals</type>
-				<notequal>global</notequal>
-			</location>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+            </field>
 		</properties>
 	</resource>
 	<resource type="Microsoft.Sql/servers/databases">
+		<enabled>true</enabled>
 		<properties>
-			<provisioningState>Succeeded</provisioningState>
-			<name></name>
-			<sku_Name>
-				<type>in</type>
-				<equal>GP_S_Gen5,GP_S_Gen5_1,System</equal>
-			</sku_Name>
-			<sku_Tier>
-				<type>in</type>
-				<equal>GeneralPurpose,System,Standard</equal>
-			</sku_Tier>
-			<sku_Capacity>
-				<type>equals</type>
-				<equal>lessorequal10</equal>
-			</sku_Capacity>
-			<location>
-				<type>notequals</type>
-				<notequal>global</notequal>
-			</location>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>sku_Name</name>
+				<func>in</func>
+				<valtype>literal</valtype>
+				<value>S0,GP_S_Gen5,GP_S_Gen5_1,System</value>
+            </field>
+			<field>
+				<name>sku_Tier</name>
+				<func>in</func>
+				<valtype>literal</valtype>
+				<value>GeneralPurpose,System,Standard</value>
+            </field>
+			<field>
+				<name>sku_Capacity</name>
+				<func>lessOrEquals</func>
+				<valtype>literal</valtype>
+				<value>10</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+            </field>
 		</properties>
 	</resource>
-	<resource type="Microsoft.Storage"></resource>
-	<resource type="Microsoft.Storage/storageAccounts"></resource>
-	<resource type="Microsoft.StorageSync/storageSyncServices"></resource>
-	<resource type="Microsoft.Web/connections"></resource>
+	<resource type="Microsoft.Storage">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Storage/storageAccounts">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.StorageSync/storageSyncServices">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Web/connections">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.web/serverfarms">
+		<enabled>true</enabled>
 		<properties>
-			<provisioningState>Succeeded</provisioningState>
-			<sku_Name>
-				<type>equals</type>
-				<equal>value</equal>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>sku_Name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
 				<value>hardwareProfile.vmSize</value>
-				<notequal></notequal>
-			</sku_Name>
-			<sku_Tier>
-				<type>equals</type>
-				<equal>Standard</equal>
-			</sku_Tier>
-			<sku_Capacity>
-				<type>equals</type>
-				<equal>lessorequal1</equal>
-			</sku_Capacity>
+            </field>
+			<field>
+				<name>sku_Tier</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Standard</value>
+            </field>
+			<field>
+				<name>sku_Capacity</name>
+				<func>lessOrEquals</func>
+				<valtype>literal</valtype>
+				<value>1</value>
+            </field>
 		</properties>
 	</resource>
-	<resource type="Microsoft.Web/sites"></resource>
+	<resource type="Microsoft.Web/sites">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.ContainerInstance/ContainerGroups">
-			<provisioningState>Succeeded</provisioningState>
-			<name>value</name>
-			<location>
-				<type>equals</type>
-				<equal>[resourceGroup().location]</equal>
-				<notequal>global</notequal>
-			</location>
-			<field value="Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB">
-				<equal>value</equal>
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>osProfile.computername</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
 			</field>
-			<field value="Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu">
-				<equal>value</equal>
-			</field>
-			<field value="Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count">
-				<equal>value</equal>
-			</field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>1.5</value>
+            </field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>1</value>
+            </field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count</name>
+				<func>exists</func>
+				<valtype>bool</valtype>
+				<value>false</value>
+            </field>
+		</properties>
 	</resource>
 </resources>
