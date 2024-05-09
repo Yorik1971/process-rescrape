@@ -50,7 +50,8 @@ param
 	[Parameter(HelpMessage = 'Path to output files')]
 	[Alias('o')]
 	[string]$OutPath,
-	[Parameter(HelpMessage = 'Show the messages to the console')]
+	[Parameter(Mandatory = $true,
+			   HelpMessage = 'Show the messages to the console')]
 	[Alias('d')]
 	[bool]$Details = $false,
 	[Parameter(HelpMessage = 'Attach the datetime stamp to the output folder and some files')]
