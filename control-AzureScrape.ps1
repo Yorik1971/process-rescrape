@@ -162,7 +162,7 @@ Write-log -toConsole $Details -id 125 -msg "control-AzureScrape.ps1 Version: $($
 $file = New-Item -Path "$($outDir)\ControlFile.chk" -ItemType File -Force
 
 # Define the argument list to pass to the get-ResourceScrape.ps1 utility
-$argList = "-i `"$($SubscriptionId)`" -u `"$($Username)`" -p `"$($Password)`" -o `"$($outDir)`""
+$argList = "-i `"$($SubscriptionId)`" -u `"$($Username)`" -p `"$($Password)`" -o `"$($outDir)`" -d $false"
 
 # Create the Jenkins In Progress Status file
 $file = New-Item -Path "$($outDir)\started.log" -ItemType File -Force
@@ -215,7 +215,7 @@ if (($cntFiles -lt 1) -and (Test-Path -Path "$($outDir)\FlagFile.chk" -PathType 
 	Compress-Archive @compress
 	
 	# Define the argument list to pass to the process-ResourceScrape.ps1 utility
-	$argList = "-f `"$($outDir)\$($fileResourceScrape)`" -o `"$($outDir)`""
+	$argList = "-f `"$($outDir)\$($fileResourceScrape)`" -o `"$($outDir)`" -d $false"
 	
 	# Launch the process-ResourceScrape.ps1 utility
 	Write-log -toConsole $Details -id 128 -msg "The get-ResourceScrape.ps1 utility has completed."
