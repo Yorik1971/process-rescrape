@@ -6,22 +6,22 @@
 		A description of the file.
 	
 	.PARAMETER File
-		Supply the input file containing the JSON object of the Resource Scrape to be processed
+		Supply the input file containing the JSON object of the Resource Scrape to be processed.
 	
 	.PARAMETER showHtml
 		If you want to view the HTML output automatically include the showHTML switch parameter
 	
 	.PARAMETER rulesfile
-		A description of the rulesfile parameter.
+		Enter the path to the Rules file. The Rules file defines the characteristics of an ACP
 	
 	.PARAMETER OutPath
 		Path to output files
 	
-	.PARAMETER Verbose
+	.PARAMETER Details
 		Show the messages to the console
 	
-	.PARAMETER NoStamp
-		Do not attach the datetime stamp to the output folder and some files
+	.PARAMETER Stamp
+		Attach the datetime stamp to the output folder and some files
 	
 	.PARAMETER show-HTML
 		If you want to view the HTML output automatically include the show-HTML switch parameter
@@ -37,23 +37,25 @@
 #>
 param
 (
-	[Parameter(Mandatory = $true)]
+	[Parameter(Mandatory = $true,
+			   HelpMessage = 'Supply the input file containing the JSON object of the Resource Scrape to be processed.')]
 	[Alias('f')]
 	[string]$file,
 	[Parameter(HelpMessage = 'If you want to view the HTML output automatically include the show-HTML switch parameter')]
 	[Alias('h')]
 	[switch]$showHtml,
+	[Parameter(HelpMessage = 'Enter the path to the Rules file. The Rules file defines the characteristics of an ACP')]
 	[Alias('r')]
 	[string]$rulesFile,
 	[Parameter(HelpMessage = 'Path to output files')]
 	[Alias('o')]
 	[string]$OutPath,
 	[Parameter(HelpMessage = 'Show the messages to the console')]
-	[Alias('v')]
-	[switch]$Verbose,
-	[Parameter(HelpMessage = 'Do not attach the datetime stamp to the output folder and some files')]
-	[Alias('n')]
-	[switch]$NoStamp
+	[Alias('d')]
+	[bool]$Details = $false,
+	[Parameter(HelpMessage = 'Attach the datetime stamp to the output folder and some files')]
+	[Alias('s')]
+	[switch]$Stamp
 )
 
 $outRcd = ""
@@ -101,7 +103,7 @@ function Show-Error {
 		$e = $e.InnerException
 		$msg += "`n" + $e.Message
 	}
-	Write-log -toConsole $Verbose -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+	Write-log -toConsole $Details -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 }
 
 function ConvertTo-IndentedHtmlList {
@@ -195,7 +197,7 @@ function Set-acp {
 		$props
 	)
 	
-	Write-log -toConsole $Verbose -id 67 -msg "Looking up rules for property: $($name).`n"
+	Write-log -toConsole $Details -id 67 -msg "Looking up rules for property: $($name).`n"
 	
 	# verify that the rules file exists
 	if (Test-Path -Path $rulesFile -PathType Leaf) {
@@ -207,13 +209,13 @@ function Set-acp {
 			$rule = $rules.resources.resource[$x]
 			
 			if ($rule.type -eq $row.ResourceType) {
-				Write-log -toConsole $Verbose -id 68 -msg "Rule has been found for $($rule.type).`n"
+				Write-log -toConsole $Details -id 68 -msg "Rule has been found for $($rule.type).`n"
 				# only process the rule if it has been enabled. Otherwise, ignore it
 				if ($rule.enabled -eq "true") {
-					Write-log -toConsole $Verbose -id 69 -msg "Rule is enabled.`n"
+					Write-log -toConsole $Details -id 69 -msg "Rule is enabled.`n"
 					# Check to see if any properties exist for this rule
 					if ($rule.properties -ne $null) {
-						Write-log -toConsole $Verbose -id 70 -msg "This rule has properties.`n"
+						Write-log -toConsole $Details -id 70 -msg "This rule has properties.`n"
 						
 						$elem = "                {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
 						$elem += "`"$($rule.type)`"`n                        },`n"
@@ -255,7 +257,7 @@ function Set-acp {
 						$elem += "`n                    ]`n                },`n"
 					} else {
 						# Add the element without properties
-						Write-log -toConsole $Verbose -id 70 -msg "This rule does not have properties.`n"
+						Write-log -toConsole $Details -id 70 -msg "This rule does not have properties.`n"
 						if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
 					}
 					
@@ -264,7 +266,7 @@ function Set-acp {
 			}
 		}
 	} else {
-		Write-log -toConsole $Verbose -id 9 -msg "ERROR: Could not find the rules file. File: $($rules)`n"
+		Write-log -toConsole $Details -id 9 -msg "ERROR: Could not find the rules file. File: $($rules)`n"
 		$elem = ""
 	}
 	
@@ -350,6 +352,9 @@ function Build-Body {
 # Script Version
 $myVer = "1.1.0"
 
+# Default the Verbosity of messages to NOT
+if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
+
 # Set the Start Time
 $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $timeId = Get-Date -Format "yyyyMMddHHmmss"
@@ -366,11 +371,12 @@ $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($OutPath)) {
 	$outDir = "$($scriptDir)\output"
 } else {
-	$outDir = "$($OutPath)\output"
+#	$outDir = "$($OutPath)\output"
+	$outDir = "$($OutPath)"
 }
 
 # Add the Time ID to the outDir if requested
-if (-not ($NoStamp)) { $outDir = "$($outDir)_$($timeId)" }
+if ($Stamp) { $outDir = "$($outDir)_$($timeId)" }
 
 # Create the output directory if it doesn't exist
 if (-not (Test-Path -Path $outDir -PathType Container)) {
@@ -379,12 +385,12 @@ if (-not (Test-Path -Path $outDir -PathType Container)) {
 
 # Define the log file name
 $log = "$($outDir)\resourceProcessor"
-if (-not ($NoStamp)) { $log = "$($log)_$($timeId)" }
+if ($Stamp) { $log = "$($log)_$($timeId)" }
 $log = "$($log).log"
 
 # Write the program version to the log file/screen
-Write-log -toConsole $Verbose -id 55 -msg "process-ResourceScrape.ps1 Version: $($myVer)"
-Write-log -toConsole $Verbose -id 57 -msg "Input File: $($inFile)"
+Write-log -toConsole $Details -id 55 -msg "process-ResourceScrape.ps1 Version: $($myVer)"
+Write-log -toConsole $Details -id 57 -msg "Input File: $($inFile)"
 
 #Write-Host "`nprocess-ResourceScrape.ps1 Version: $($myVer)"
 #Write-Host "File: $($infile)"
@@ -397,12 +403,12 @@ if (-not ([string]::IsNullOrEmpty($rulesFile))) {
 } else {
 	$rulesFile = "rules.xml"
 }
-Write-log -toConsole $Verbose -id 58 -msg "Using Rules File: $($rulesFile)"
+Write-log -toConsole $Details -id 58 -msg "Using Rules File: $($rulesFile)"
 #	[xml]$rules = Get-Content -Path "C:\Users\WayneKlapwyk\OneDrive - Skillable\Documents\A - Lab Ops\OKRs\2024\Automate ACP\GitRepo\processScrape\rules.xml"
 
 if (Test-Path $file -PathType Leaf) {
 #	Write-Host "`nFile Found. Processing... `n"
-	Write-log -toConsole $Verbose -id 59 -msg "Input File Found. Continuing... `n"
+	Write-log -toConsole $Details -id 59 -msg "Input File Found. Continuing... `n"
 	
 	# Read the JSON file Resource Scrape
 	$jsonScrape = Get-Content -Path $File -Raw
@@ -419,16 +425,16 @@ if (Test-Path $file -PathType Leaf) {
 	$headers = "","Name","Location","Resource Group","Resource Type",""
 	
 	# Add table headers
-	Write-log -toConsole $Verbose -id 61 -msg "Adding Table headers`n"
+	Write-log -toConsole $Details -id 61 -msg "Adding Table headers`n"
 	$htmlTable += (Add-headers -listHeaders $headers)
 	$htmlTable += "`n<tbody>`n"
 	
 	# Add table rows
-	Write-log -toConsole $Verbose -id 62 -msg "Building the report body`n"
+	Write-log -toConsole $Details -id 62 -msg "Building the report body`n"
 	$htmlTable += (Build-Body -rowData $sortObjects)
 	
 	# Build the final initial ACP suggestion
-	Write-log -toConsole $Verbose -id 63 -msg "Building the initial ACP suggestion`n"
+	Write-log -toConsole $Details -id 63 -msg "Building the initial ACP suggestion`n"
 	$group = ""
 	$typeElems = $typeElems | Sort-Object
 	if ($typeElems.Count -gt 0) {
@@ -454,7 +460,7 @@ if (Test-Path $file -PathType Leaf) {
 	[void]$outElems.Insert(0, "{`n    `"if`": {`n        `"not`": {`n            `"anyOf`": [`n")
 	
 	# Construct the output file path with the new extension
-	Write-log -toConsole $Verbose -id 64 -msg "Defining the output files and paths`n"
+	Write-log -toConsole $Details -id 64 -msg "Defining the output files and paths`n"
 #	if ([string]::IsNullOrEmpty($dir)) { $dir = "." }
 #	$outFile = Join-Path -Path $dir -ChildPath "$($noExt).html"
 #	$outACP = (Join-Path -Path $dir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
@@ -464,7 +470,7 @@ if (Test-Path $file -PathType Leaf) {
 	$inACPFile = Split-Path $outACP -leaf
 	
 	# Define the HTML document content
-	Write-log -toConsole $Verbose -id 65 -msg "Assembling the HTML document`n"
+	Write-log -toConsole $Details -id 65 -msg "Assembling the HTML document`n"
 	$htmlDocument = @"
 <!DOCTYPE html>
 <html lang='en'>
@@ -582,7 +588,7 @@ for (var i = 0; i < rows.length; i++) {
 </html>
 "@
 	
-	Write-log -toConsole $Verbose -id 66 -msg "Writing out the HTML file and initial ACP file`n"
+	Write-log -toConsole $Details -id 66 -msg "Writing out the HTML file and initial ACP file`n"
 	
 	# Save the HTML document to a file
 	$htmlDocument | Out-File -FilePath $outFile -Encoding UTF8
@@ -595,7 +601,7 @@ for (var i = 0; i < rows.length; i++) {
 		Invoke-Item $outFile
 	}
 } else {
-	Write-log -toConsole $Verbose -id 10 -msg "Input file path is required. Please try again.`n"
+	Write-log -toConsole $Details -id 10 -msg "Input file path is required. Please try again.`n"
 #	Write-Host "Input file path is required. Please try again."
 	throw "Invalid file or path. Please try again."
 	exit
