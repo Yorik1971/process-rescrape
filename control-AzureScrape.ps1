@@ -15,16 +15,16 @@
 		Provide the Azure Subscription ID in the format "yyyy-yyyy-yyyy-yyyy"
 	
 	.PARAMETER Username
-		A description of the Username parameter.
+		Provide the Azure Subscription username
 	
 	.PARAMETER Password
-		A description of the Password parameter.
+		Provide the Azure Subscription password
 	
-	.PARAMETER Verbose
+	.PARAMETER Details
 		Show the messages to the console
 	
-	.PARAMETER NoStamp
-		Do not attach the datetime stamp to the output folder and some files
+	.PARAMETER Stamp
+		Attach the datetime stamp to the output folder and some files
 	
 	.NOTES
 		===========================================================================
@@ -41,7 +41,7 @@ param
 			   ValueFromPipeline = $true,
 			   HelpMessage = 'Provide the Azure Subscription ID in the format "yyyy-yyyy-yyyy-yyyy"')]
 	[ValidatePattern('^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')]
-	[Alias('s')]
+	[Alias('i')]
 	[string]$SubscriptionId,
 	[Parameter(Mandatory = $true,
 			   ValueFromPipeline = $true,
@@ -52,12 +52,15 @@ param
 	[Parameter(Mandatory = $true)]
 	[Alias('p')]
 	[string]$Password,
+	[Parameter(HelpMessage = 'Path to output files')]
+	[Alias('o')]
+	[string]$OutPath,
 	[Parameter(HelpMessage = 'Show the messages to the console')]
-	[Alias('v')]
-	[switch]$Verbose,
-	[Parameter(HelpMessage = 'Do not attach the datetime stamp to the output folder and some files')]
-	[Alias('n')]
-	[switch]$NoStamp
+	[Alias('d')]
+	[bool]$Details = $false,
+	[Parameter(HelpMessage = 'Attach the datetime stamp to the output folder and some files')]
+	[Alias('s')]
+	[switch]$Stamp
 )
 
 <#
@@ -112,10 +115,15 @@ function Show-Error {
 #####################################
 # M A I N  L I N E
 #####################################
-# This script requires -Module Az
+
+# Create the Jenkins Status file
+$file = New-Item -Path "$($outDir)\accepted.log" -ItemType File -Force
 
 # Script Version
 $myVer = "0.0.1"
+
+# Default the Verbosity of messages to NOT
+if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
 
 # Set the Start Time
 $startTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -131,11 +139,11 @@ $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($OutPath)) {
 	$outDir = "$($scriptDir)\output_$($numDigits)"
 } else {
-	$outDir = "$($OutPath)\output_$($numDigits)"
+	$outDir = "$($OutPath)"
 }
 
 # Add the Time ID if requested
-if (-not ($NoStamp)) { $outDir = "$($outDir)_$($timeId)" }
+if ($Stamp) { $outDir = "$($outDir)_$($timeId)" }
 
 # Create the output directory if it doesn't exist
 if (-not (Test-Path -Path $outDir -PathType Container)) {
@@ -143,65 +151,99 @@ if (-not (Test-Path -Path $outDir -PathType Container)) {
 }
 
 # Define the log file name
-$log = "$($outDir)\resourceScrape_$($timeId).log"
-if (-not ($NoStamp)) { $log = "$($log)_$($timeId)" }
+$log = "$($outDir)\resourceControl"
+if ($Stamp) { $log = "$($log)_$($timeId)" }
 $log = "$($log).log"
 
 # Write the program version to the log file/screen
-Write-log -toConsole $Verbose -id 125 -msg "control-AzureScrape.ps1 Version: $($myVer)"
+Write-log -toConsole $Details -id 125 -msg "control-AzureScrape.ps1 Version: $($myVer)"
+
+# Create the Control File to help determine if the resource scrape completed successfully
+$file = New-Item -Path "$($outDir)\ControlFile.chk" -ItemType File -Force
 
 # Define the argument list to pass to the get-ResourceScrape.ps1 utility
-$argList = "-s `"$($SubscriptionId)`" -u `"$($Username)`" -p `"$($Password)`" -n"
+$argList = "-i `"$($SubscriptionId)`" -u `"$($Username)`" -p `"$($Password)`" -o `"$($outDir)`""
+
+# Create the Jenkins In Progress Status file
+$file = New-Item -Path "$($outDir)\started.log" -ItemType File -Force
 
 # Launch the get-ResourceScrape.ps1 utility
-Write-log -toConsole $Verbose -id 126 -msg "Launching the get-ResourceScrape.ps1 utility"
-Invoke-Expression "& `"get-ResourceScrape.ps1`" $argList"
+Write-log -toConsole $Details -id 126 -msg "Launching the get-ResourceScrape.ps1 utility"
+Invoke-Expression "& `".\get-ResourceScrape.ps1`" $argList"
 
 # Wait for the get-ResourceScrape.ps1 utility to create all the appropriate files
 $cntFiles = 0
-do {
-	$cntFiles = (Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.json" | Measure-Object).Count
-	if ($cntFiles -gt 0) {
-		$fileResourceScrape = Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.json"
-	} else {
-		Start-Sleep -Seconds 3 
-	}
+$cntFiles = (Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.json" | Measure-Object).Count
+if ($cntFiles -gt 0) {
+	$fileResourceScrape = Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.json"
+}
+
+if (($cntFiles -lt 1) -and (Test-Path -Path "$($outDir)\FlagFile.chk" -PathType Leaf)) {
+	# Create the Jenkins Cancelled Status file
+	$file = New-Item -Path "$($outDir)\cancelled.log" -ItemType File -Force
 	
-} while ($cntFiles -lt 1)
+	# The get-ResourceScrape.ps1 utility did not complete successfully
+	Write-log -toConsole $Details -id 101 -msg "The get-ResourceScrape.ps1 utility has NOT completed successfully."
+	Write-log -toConsole $Details -id 102 -msg "Skipping execution of the processing utility."
+	
+} elseif (($cntFiles -lt 1) -and (-not (Test-Path -Path "$($outDir)\FlagFile.chk" -PathType Leaf))) {
+	# Create the Jenkins Failed Status file
+	$file = New-Item -Path "$($outDir)\failed.log" -ItemType File -Force
+	
+	# The get-ResourceScrape.ps1 utility did not complete successfully
+	Write-log -toConsole $Details -id 134 -msg "The get-ResourceScrape.ps1 utility has FAILED."
+	Write-log -toConsole $Details -id 135 -msg "Skipping execution of the processing utility."
 
-# The get-ResourceScrape.ps1 utility completed
-Write-log -toConsole $Verbose -id 127 -msg "The get-ResourceScrape.ps1 utility has completed."
-
-# Launch the get-ResourceScrape.ps1 utility
-Write-log -toConsole $Verbose -id 127 -msg "The get-ResourceScrape.ps1 utility has completed."
-Write-log -toConsole $Verbose -id 128 -msg "Launching the process-ResourceScrape.ps1 utility"
-Invoke-Expression "& `"get-ResourceScrape.ps1`" $argList"
-
-# Define the argument list to pass to the get-ResourceScrape.ps1 utility
-$argList = "-f `"$($fileResourceScrape)`" -n"
-
-# Wait for the get-ResourceScrape.ps1 utility to create all the appropriate files
-$cntFiles = 0
-do {
+} else {
+	# Create the Jenkins Partial Success Status file
+	$file = New-Item -Path "$($outDir)\partial.log" -ItemType File -Force
+	
+	# The get-ResourceScrape.ps1 utility completed
+	Write-log -toConsole $Details -id 127 -msg "The get-ResourceScrape.ps1 utility has completed successfully."
+	
+	# Create a compressed file with the ResourceScrape JSON file
+	$zipFile = "$($outDir)\resources"
+	if ($Stamp) { $zipFile = "$($zipFile)_$($timeId)" }
+	$zipFile = "$($zipFile).zip"
+	Write-log -toConsole $Details -id 132 -msg "Creating the final ZIP file: $($zipFile)"
+	Write-log -toConsole $Details -id 133 -msg "Adding the Resource Scrape to the final ZIP file."
+	$compress = @{
+		Path = "$($outDir)\$($fileResourceScrape)"
+		CompressionLevel = "Optimal"
+		DestinationPath = "$($zipFile)"
+	}
+	Compress-Archive @compress
+	
+	# Define the argument list to pass to the process-ResourceScrape.ps1 utility
+	$argList = "-f `"$($outDir)\$($fileResourceScrape)`" -o `"$($outDir)`""
+	
+	# Launch the process-ResourceScrape.ps1 utility
+	Write-log -toConsole $Details -id 128 -msg "The get-ResourceScrape.ps1 utility has completed."
+	Write-log -toConsole $Details -id 129 -msg "Launching the process-ResourceScrape.ps1 utility"
+	Invoke-Expression "& `".\process-ResourceScrape.ps1`" $argList"
+	
+	# Wait for the get-ResourceScrape.ps1 utility to create all the appropriate files
+	$cntFiles = 0
 	$cntFiles = (Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.html" | Measure-Object).Count
 	$cntFiles = $cntFiles + (Get-ChildItem -Path "$($outDir)" -File -Filter "initialACP*.json" | Measure-Object).Count
 	if ($cntFiles -gt 1) {
 		$fileResourceReport = Get-ChildItem -Path "$($outDir)" -File -Filter "resourcescrape_*.html"
 		$fileResourceAcp = Get-ChildItem -Path "$($outDir)" -File -Filter "initialACP_*.json"
-	} else {
-		Start-Sleep -Seconds 3
 	}
+		
+	# The process-ResourceScrape.ps1 utility completed
+	Write-log -toConsole $Details -id 130 -msg "The process-ResourceScrape.ps1 utility has completed successfully."
 	
-} while ($cntFiles -le 1)
-
-# The get-ResourceScrape.ps1 utility completed
-Write-log -toConsole $Verbose -id 127 -msg "The get-ResourceScrape.ps1 utility has completed."
-
-# Create a compressed file with the ResourceScrape JSON and HTML files and the initial ACP file
-$zipFile = "$($outDir)\resources"
-if (-not ($NoStamp)) { $zipFile = "$($zipFile)_$($timeId)" }
-$zipFile = "$($zipFile).zip"
-Write-log -toConsole $Verbose -id 127 -msg "Creating the final ZIP file: $($zipFile)"
-Compress-Archive -Path $fileResourceScrape -DestinationPath $zipFile -CompressionLevel Optimal
-Compress-Archive -Path $fileResourceReport -Update -DestinationPath $zipFile -CompressionLevel Optimal
-Compress-Archive -Path $fileResourceAcp -Update -DestinationPath $zipFile -CompressionLevel Optimal 
+	$compress = @{
+		Path			 = "$($outDir)\$($fileResourceReport)", "$($outDir)\$($fileResourceAcp)", "$($outDir)\resourceControl.log", "$($outDir)\resourceProcessor.log", "$($outDir)\resourceScrape.log"
+		CompressionLevel = "Optimal"
+		DestinationPath  = "$($zipFile)"
+	}
+	Compress-Archive @compress -Update
+	# Add the initial ACP file to the compressed file 
+	Write-log -toConsole $Details -id 131 -msg "Adding the HTML report and Initial ACP to the final ZIP file: $($zipFile)"
+	Write-log -toConsole $Details -id 136 -msg "control-AzureScrape.ps1 - Ending Processing"
+	
+	# Create the Jenkins Full Success Status file
+	$file = New-Item -Path "$($outDir)\success.log" -ItemType File -Force
+}
