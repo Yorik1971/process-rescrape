@@ -560,6 +560,29 @@ The get-ResourceScrape.ps1 utility has ended
 	Write-log -toConsole $Details -id 55 -msg $msg
 }
 
+function Cleanup-json {
+	[CmdletBinding()]
+	[OutputType([string])]
+	param
+	(
+		[string]$inJson
+	)
+	
+	# Replace escaped string characters
+	$tmpJson = $inJson.replace('"{', '{')
+	$tmpJson = $tmpJson.replace('"}', '}')
+	$tmpJson = $tmpJson.replace('\r\n', '`n')
+	$tmpJson = $tmpJson.replace('\"', '"')
+	$tmpJson = $tmpJson.replace('\\/', '')
+	$tmpJson = $tmpJson.replace('                      ""[]"",', '')
+	$tmpJson = $tmpJson.replace('                      {', '        {')
+	$tmpJson = $tmpJson.replace('                          "', '            "')
+	$tmpJson = $tmpJson.replace('                      }', '        }')
+	$tmpJson = $tmpJson.replace('                  ]', '    ]')
+	
+	return $tmpJson
+}
+
 
 #####################################
 # M A I N  L I N E
@@ -618,21 +641,13 @@ if (Set-Environment -inDir $scriptDir) {
 		Create-TempFiles -inDir $outDir
 		
 		if (Run-Scrape -inDir $outDir) {
-                        # Read the temporary file into a string variable
-			$inJson = Get-Content "$($outDir)\output.tmp" | Out-String
-
-   			# Replace escaped string characters
-			$tmpJson = $inJson.replace('"{','{')
-			$tmpJson = $tmpJson.replace('"}','}')
-			$tmpJson = $tmpJson.replace('\r\n','')
-			$tmpJson = $tmpJson.replace('\"','"')
-			$tmpJson = $tmpJson.replace('\\/','')
-			$tmpJson = $tmpJson.replace('}"','}')
-
-   			# Write out the updated output.tmp file
+			# Read the temporary file into a string variable
+			$tmpJson = Cleanup-json -inJson (Get-Content "$($outDir)\output.tmp" | Out-String)
+			
+			# Write out the updated output.tmp file
 			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
-   			Set-Content -Path "$($outDir)\$($fileNameDate)" -Value $tmpJson
-      			
+			Set-Content -Path "$($outDir)\$($fileNameDate)" -Value $tmpJson
+						
 #			# Create a copy of the temporary file with the current date & time
 #			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
 #			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
