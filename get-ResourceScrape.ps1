@@ -618,9 +618,24 @@ if (Set-Environment -inDir $scriptDir) {
 		Create-TempFiles -inDir $outDir
 		
 		if (Run-Scrape -inDir $outDir) {
-			# Create a copy of the temporary file with the current date & time
+                        # Read the temporary file into a string variable
+			$inJson = Get-Content "$($outDir)\output.tmp" | Out-String
+
+   			# Replace escaped string characters
+			$tmpJson = $inJson.replace('"{','{')
+			$tmpJson = $tmpJson.replace('"}','}')
+			$tmpJson = $tmpJson.replace('\r\n','')
+			$tmpJson = $tmpJson.replace('\"','"')
+			$tmpJson = $tmpJson.replace('\\/','')
+			$tmpJson = $tmpJson.replace('}"','}')
+
+   			# Write out the updated output.tmp file
 			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
-			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
+   			Set-Content -Path "$($outDir)\$($fileNameDate)" -Value $tmpJson
+      			
+#			# Create a copy of the temporary file with the current date & time
+#			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
+#			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
 			
 			Show-Results -inDir "$($outDir)" -inFilename "$($fileNameDate)"
 		} else {
