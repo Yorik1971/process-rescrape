@@ -54,10 +54,10 @@ param
 	[Parameter(HelpMessage = 'Path to output files')]
 	[Alias('o')]
 	[string]$OutPath,
-	[Parameter(Mandatory = $true,
+	[Parameter(Mandatory = $false,
 			   HelpMessage = 'Show the messages to the console')]
 	[Alias('d')]
-	[bool]$Details = $false,
+	[switch]$Details = $false,
 	[Parameter(HelpMessage = 'Attach the datetime stamp to the output folder and some files')]
 	[Alias('s')]
 	[switch]$Stamp
@@ -122,19 +122,17 @@ function Set-Environment {
 	try	{
 		# Install the Azure PowerShell module (if you haven't already)
 		Write-log -toConsole $Details -id 50 -msg "Verifying the local Powershell Azure environment."
-#		Write-Host "Verifying the local Powershell Azure environment."
+
 		If (Get-Module -ListAvailable -Name Az)	{
-#			Write-Host "Checking availability of the Azure Az module"
+			# Check the availability of the Azure Az module
 			Import-Module Az -ErrorAction Stop
-#			Write-Host "The Azure Az module is ready for use"
 			Write-log -toConsole $Details -id 51 -msg "The Azure Az module is ready for use"
 		} else {
-#			Write-Host "This utility requires the use of the Azure Az Powershell module."
+			# This utility requires the use of the Azure Az Powershell module.
 			Write-log -toConsole $Details -id 52 -msg "This utility requires the use of the Azure Az Powershell module."
-#			Write-Host "Please install this module as an administrator before proceeding."
-			Write-log -toConsole $Details -id 53 -msg "Please install this module as an administrator before proceeding."
-##			Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force
-##			Import-Module -Name Az
+			Write-log -toConsole $Details -id 53 -msg "If you have not done so, please install this module as an administrator before proceeding using these commands:"
+			Write-log -toConsole $Details -id 57 -msg "	 Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force"
+			Write-log -toConsole $Details -id 58 -msg "	 Import-Module -Name Az"
 			
 		}
 	} catch	{
@@ -218,13 +216,8 @@ To stop this utility before the end of the lab, REMOVE the following File:
 	Write-log -toConsole $Details -id 54 -msg $msg
 	
 	# Create/overwrite the temporary output file with a blank default file
-	$hdr = @"
-{
-  `"Resources`": []
-}
-"@
 	Remove-Item -Path "$($inDir)\output.tmp" -ErrorAction SilentlyContinue
-	Set-Content -Path "$($inDir)\output.tmp" -Value $hdr
+	Set-Content -Path "$($inDir)\output.tmp" -Value ''
 }
 
 function Build-outputRecord {
@@ -265,7 +258,7 @@ function Build-outputRecord {
 			if ($inProps.Count -gt 0) {
 				
 				# Set up the base resource with Tags
-				$tmpJSON = @{
+				$targetJSON = @{
 					"Timestamp"		    = $inTimeStamp
 					"Name"			    = $inRcd.Name
 					"ResourceGroupName" = $inRcd.ResourceGroupName
@@ -273,14 +266,11 @@ function Build-outputRecord {
 					"Location"		    = $inRcd.Location
 					"ResourceId"	    = $inRcd.ResourceId
 					"Tags"			    = $arrTags
-				}
+				} | ConvertTo-Json
 				
 				# Add in the Properties
-				$targetJSON = $tmpJSON | ConvertTo-Json | ConvertFrom-Json
-				$newProps = $inProps | ConvertFrom-Json
-				#			$targetJSON | Add-Member -MemberType NoteProperty -Name "ResProperties" -Value $newProps -Force
 				$targetJSON | Add-Member -MemberType NoteProperty -Name "ResProperties" -Value $inProps -Force
-				
+			
 				$retObj = $targetJSON
 				
 			} else {
@@ -295,7 +285,8 @@ function Build-outputRecord {
 					"ResourceId"	    = $inRcd.ResourceId
 					"Tags"			    = $arrTags
 					"ResProperties"	    = "[]"
-				}
+				} | ConvertTo-Json
+			
 				$retObj = $targetJSON
 			}
 	} catch {
@@ -324,20 +315,20 @@ function Is-Unique {
 		# Import the temporary output file
 		$csv = Import-Csv "$($outDir)\output.tmp"
 		$jsn = Get-Content -Path "$($outDir)\output.tmp" -Raw | ConvertFrom-Json
-		$chk = $inRow 
 		
 		# Check if the record exists in the JSON object
-		$recordExists = $jsn.resources | Where-Object {
-			$_.Name -eq $chk.Name -and
-			$_.ResourceGroupName -eq $chk.ResourceGroupName -and
-			$_.ResourceType -eq $chk.ResourceType -and
-			$_.Location -eq $chk.Location -and
-			$_.ResourceId -eq $chk.ResourceId -and
-			$_.ResProperties -eq $chk.ResProperties}
+		$recordExists = $jsn | Where-Object {
+			$_.ResourceName -eq $inRow.ResourceName -and
+			$_.ResourceGroupName -eq $inRow.ResourceGroupName -and
+			$_.ResourceType -eq $inRow.ResourceType -and
+			$_.ResourceLocation -eq $inRow.ResourceLocation -and
+			$_.ResourceId -eq $inRow.ResourceId -and
+			[string]$_.ResProperties -eq [string]$inRow.ResProperties
+		}
 		
 		# Output the result
 		if ($recordExists) {
-#			Write-Host "Record already exists."
+			Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($inRow.ResourceName)"
 			$retVal = $false
 		}
 	} catch {
@@ -354,10 +345,8 @@ function Run-Scrape {
 		[Parameter(Mandatory = $true)]
 		[string]$inDir
 	)
-	
-	$retVal = $true
-	$outJson = ""
-	
+	$retVal = $false
+
 	try {
 		# Query the subscription for resources until the Flag File is removed
 		# or for a maximum of 10 hours
@@ -385,86 +374,64 @@ function Run-Scrape {
 					} catch {
 						if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
 							Show-Error -err "Auth" -id 11
+						} else {
+							Show-Error -err "Res" -id 11
 						}
 					}
 				}
 				
-				if ($resources.Count -gt 0) {
-					# Add the TimeStamp and Properties to each resource
-					$rcd = $null
-					
-					$azResourcesTS = foreach ($rsc in $resources) {
-						try {
-							# Get the resource by its name, resource group, and type, and expand its properties
-							try {
-								$data = ""
-								$data = Get-AzResource -Name $rsc.Name -ResourceGroupName $rsc.ResourceGroupName -ResourceType $rsc.ResourceType -ExpandProperties -ErrorAction Stop
-							} catch {
-								if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
-									Show-Error -err "Auth" -id 12
-								}
-							}
-							# Convert the properties object to a JSON string
-							$props = $data.Properties
-							if ([string]::IsNullOrEmpty($props)) {
-								# Pause for 2 seconds and try again
-								Start-Sleep -Seconds 2
-								# Get the resource by its name, resource group, and type, and expand its properties
-								try {
-									$data = Get-AzResource -Name $rsc.Name -ResourceGroupName $rsc.ResourceGroupName -ResourceType $rsc.ResourceType -ExpandProperties -ErrorAction Stop
-								} catch {
-									if ((($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) -And (Test-Path -Path "$($outDir)\FlagFile.chk" -PathType Leaf)) {
-										Show-Error -err "Auth" -id 13
-									}
-								}
-								# Convert the properties object to a JSON string
-								$props = $data.Properties
-							}
+				# Build the unified Resource Record
+				foreach ($resource in $resources) {
+					try {
+						$resourceDetails = Get-AzResource -ResourceId $resource.ResourceId -ExpandProperties
+						
+						# Get current timestamp
+						$timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+						
+						# Create a custom object combining resource and resource group properties
+						$combinedResource = [PSCustomObject]@{
+							Timestamp			  = $timeStamp
+							ResourceGroupName	  = $resourceGroup.ResourceGroupName
+							ResourceGroupLocation = $resourceGroup.Location
+							ResourceGroupTags	  = $resourceGroup.Tags
+							ResourceId		      = $resourceDetails.ResourceId
+							ResourceName		  = $resourceDetails.Name
+							ResourceType		  = $resourceDetails.ResourceType
+							ResourceLocation	  = $resourceDetails.Location
+							ResProperties         = $resourceDetails.Properties
+							ResourceTags		  = $resourceDetails.Tags
+						}
+						
+						if (Is-Unique -inRow $combinedResource) {
+							# Add the combined object to the array
+							$combinedResources += $combinedResource
 							
-							if (-not ([string]::IsNullOrEmpty($props))) {
-								# Get current timestamp
-								$timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-								# Create a temporary version of the resource
-								$tmp = Build-outputRecord -inRcd $data -inTimeStamp $timestamp -inProps ($data.Properties | ConvertTo-Json)
-								
-								# Check to see if the record is unique
-								if (-not ([string]::IsNullOrEmpty($tmp))) {
-									if (Is-Unique -inRow $tmp[$tmp.count - 1]) {
-										# Add the number of records being added to the output file
-										$script:cntRecords++
-										
-										# Read the current JSON file 
-										$currFile = Get-Content -Path "$($inDir)\output.tmp" -Raw
-										
-										# Set up the output record by converting the output.tmp data from a JSON object
-										$outData = $currFile | ConvertFrom-Json
-										
-										# Add the new "tmp" Resource record to the collection of Resources
-										$newResources = $outData.Resources + $tmp[$tmp.Count - 1]
-										$outData.Resources = $newResources
-										
-										# Convert the output data back to JSON
-										$jsnData = $outData | ConvertTo-Json
-
-										# Export the Resource result to the JSON file
-										Set-Content -Path "$($inDir)\output.tmp" -Value $jsnData
-										
-										# Increment the resource counter
-										$script:cntRecords++
-									}
-								}
-							}
-						} catch {
-							Show-Error -err $_ -id 6
+							# Convert the combined resources array to JSON
+							$combinedResourcesJson = $combinedResources | ConvertTo-Json -Depth 50
+							
+							# Export the Resource result to the JSON file
+							Set-Content -Path "$($inDir)\output.tmp" -Value $combinedResourcesJson
+							
+							# Increment the resource counter
+							$script:cntRecords++
+						}
+						
+						
+					} catch {
+						if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
+							Show-Error -err "Auth" -id 11
 						}
 					}
 				}
 			}
+			
 		} while ([System.IO.File]::Exists("$($inDir)\FlagFile.chk"))
+		
+		$retVal = $true
+		
 	} catch {
 		Show-Error -err $_ -id 7
 		
-		$retVal = $false
 	}
 	
 	return $retVal
@@ -560,37 +527,13 @@ The get-ResourceScrape.ps1 utility has ended
 	Write-log -toConsole $Details -id 55 -msg $msg
 }
 
-function Cleanup-json {
-	[CmdletBinding()]
-	[OutputType([string])]
-	param
-	(
-		[string]$inJson
-	)
-	
-	# Replace escaped string characters
-	$tmpJson = $inJson.replace('"{', '{')
-	$tmpJson = $tmpJson.replace('"}', '}')
-	$tmpJson = $tmpJson.replace('\r\n', '`n')
-	$tmpJson = $tmpJson.replace('\"', '"')
-	$tmpJson = $tmpJson.replace('\\/', '')
-	$tmpJson = $tmpJson.replace('                      ""[]"",', '')
-	$tmpJson = $tmpJson.replace('                      {', '        {')
-	$tmpJson = $tmpJson.replace('                          "', '            "')
-	$tmpJson = $tmpJson.replace('                      }', '        }')
-	$tmpJson = $tmpJson.replace('                  ]', '    ]')
-	
-	return $tmpJson
-}
-
-
 #####################################
 # M A I N  L I N E
 #####################################
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.0.2"
+$myVer = "1.0.3"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
@@ -609,7 +552,6 @@ $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($OutPath)) {
 	$outDir = "$($scriptDir)\output_$($numDigits)"
 } else {
-#	$outDir = "$($OutPath)\output_$($numDigits)"
 	$outDir = "$($OutPath)"
 }
 
@@ -626,6 +568,9 @@ $log = "$($outDir)\resourceScrape"
 if ($Stamp) { $log = "$($log)_$($timeId)" }
 $log = "$($log).log"
 
+# Initialize an array to hold the combined resource data
+$combinedResources = @()
+
 # Write the program version to the log file/screen
 Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer)"
 
@@ -641,22 +586,14 @@ if (Set-Environment -inDir $scriptDir) {
 		Create-TempFiles -inDir $outDir
 		
 		if (Run-Scrape -inDir $outDir) {
-			# Read the temporary file into a string variable
-			$tmpJson = Cleanup-json -inJson (Get-Content "$($outDir)\output.tmp" | Out-String)
-			
-			# Write out the updated output.tmp file
+			# Create a copy of the temporary file with the current date & time
 			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
-			Set-Content -Path "$($outDir)\$($fileNameDate)" -Value $tmpJson
-						
-#			# Create a copy of the temporary file with the current date & time
-#			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
-#			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
+			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
 			
 			Show-Results -inDir "$($outDir)" -inFilename "$($fileNameDate)"
 		} else {
 			$errTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 			Write-log -toConsole $Details -id 56 -msg "An error was encountered during the Resource Scrape process.`n$($_)"
-#			Write-Host "$($errTime)  An error was encountered during the Resource Scrape process."
 			
 			Show-Error -err $_ -id 8
 		}
