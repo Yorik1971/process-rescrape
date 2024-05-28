@@ -46,14 +46,14 @@ param
 	[switch]$showHtml,
 	[Parameter(HelpMessage = 'Enter the path to the Rules file. The Rules file defines the characteristics of an ACP')]
 	[Alias('r')]
-	[string]$rulesFile,
+	[string]$rulesFile = 'rules.xml',
 	[Parameter(HelpMessage = 'Path to output files')]
 	[Alias('o')]
 	[string]$OutPath,
-	[Parameter(Mandatory = $true,
+	[Parameter(Mandatory = $false,
 			   HelpMessage = 'Show the messages to the console')]
 	[Alias('d')]
-	[bool]$Details = $false,
+	[switch]$Details = $false,
 	[Parameter(HelpMessage = 'Attach the datetime stamp to the output folder and some files')]
 	[Alias('s')]
 	[switch]$Stamp
@@ -218,14 +218,14 @@ function Set-acp {
 					if ($rule.properties -ne $null) {
 						Write-log -toConsole $Details -id 70 -msg "This rule has properties.`n"
 						
-						$elem = "                {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
+						$elem = "               {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
 						$elem += "`"$($rule.type)`"`n                        },`n"
 						for ($x = 0; $x -lt $rule.properties.field.count; $x++) {
 							if ((-not ($rule.properties.field.name -contains "provisioningstate")) -or ($rule.properties.field[0].value -match "Succeeded")) {
 								if (($x -eq 0) -and (($rule.properties.field[0].name -match "provisioningState") -and ($rule.properties.field[0].value -match "Succeeded"))) {
 									$x++
 								}
-								$elem += "                        {`n                            `"field`": `"$($rule.properties.field[$x].name)`"`n                            `"$($rule.properties.field[$x].func)`": "
+								$elem += "                        {`n                            `"field`": `"$($rule.properties.field[$x].name)`",`n                            `"$($rule.properties.field[$x].func)`": "
 								
 								if ($rule.properties.field[$x].func -eq "in") {
 									# Format the list of values on separate lines
@@ -286,15 +286,15 @@ function Build-Body {
 	$cnt = 1
 	$rowData | ForEach-Object {
 		$object = $_
-		if (-not ([string]::IsNullOrEmpty($object.Name))) {
-			
+		if (-not ([string]::IsNullOrEmpty($object.ResourceName))) {
+				
 			# determine the odd/even nature of the row and use the appropriate CSS class
 			$cssStyle = if ($cnt % 2 -eq 0) { "background-color: #ffffff;" } else { "background-color: #B3E5FC;" }
 			# Add the main row
 			$retVal += "  <tr class='main-row' style='$cssStyle'>`n"
 			$retVal += "    <td><button type='button' id='prop' onclick='toggleRow(this)'>⮟</button></td>`n"
-			$retVal += "    <td>$($object.Name)</td>`n"
-			$retVal += "    <td>$($object.Location)</td>`n"
+			$retVal += "    <td>$($object.ResourceName)</td>`n"
+			$retVal += "    <td>$($object.ResourceLocation)</td>`n"
 			$retVal += "    <td>$($object.ResourceGroupName)</td>`n"
 			$retVal += "    <td>$($object.ResourceType)</td>`n"
 			$retVal += "    <td align=right style='background-color: #ffffff;'>&nbsp</td>`n"
@@ -304,33 +304,26 @@ function Build-Body {
 			$retVal += "  <tr class='details-row' style='display:none'>`n"
 			$retVal += "    <td>&nbsp;</td><td colspan=5>`n"
 			$retVal += "      <table><tr style='background-color: #FFFDE7'><td>`n"
-			$object.PSObject.Properties | ForEach-Object {
-				if (-not ([string]::IsNullOrEmpty($_.Name)) -and -not ([string]::IsNullOrEmpty($_.Value))) {
-					if ($_.Name -eq 'Tags' -or $_.Name -eq 'ResProperties') {
-						$retVal += "        <ul>`n"
-					}
-					if ($_.Name -eq 'Tags') {
-						$retVal += "          <li><strong>Tags:</strong> $($_.Value)</li>`n"
-					} elseif ($_.Name -eq 'ResProperties') {
-						$jsnProps = $_.Value | ConvertFrom-Json
+			$object | ForEach-Object {
+				if (-not ([string]::IsNullOrEmpty($_.ResProperties))) {
+					$retVal += "        <ul>`n"
+						
+					try {
+						$jsnProps = $_.ResProperties | ConvertFrom-Json
+					} catch {
+						$jsnProps = $_.ResProperties | ConvertTo-Json | ConvertFrom-Json
+					} finally {
 						$retVal += "        <li><strong>Properties:</strong><br>`n          "
-						$retVal += ConvertTo-IndentedHtmlList -Object $jsnProps
+						$retVal += ConvertTo-IndentedHtmlList -Object $_.ResProperties
 						$retVal += "`n        </li>`n"
 						
 						# Evaluate the row data for the ACP		
-						$chkElems = Set-acp -row $object -props $jsnProps -name $_.Name
+						$chkElems = Set-acp -row $object -props $_.Resproperties -name $_.ResourceName
 						if (($chkElems -ne $null) -and ($chkElems -ne 0) -and (-not $outElems.Contains($chkElems))) {
 							[void]$outElems.Add($chkElems)
 						}
-						
-						#						if (-not $acpList.Contains($arrElems)) { $acpList.Add($arrElems) }
-						
-					} else {
-						# The $_.Name value will be ResourceId or Timestamp and we don't care about those in this situation 
 					}
-					if (($_.Name -eq 'Tags') -or ($_.Name -eq 'ResProperties')) {
-						$retVal += "        </ul>`n"
-					}
+					$retVal += "        </ul>`n"
 				}
 			}
 			$retVal += "      </td></tr></table>`n    </td>`n  </tr>`n"
@@ -351,7 +344,7 @@ function Build-Body {
 #####################################
 
 # Script Version
-$myVer = "1.1.0"
+$myVer = "1.1.1"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
@@ -372,7 +365,7 @@ $scriptDir = $PSScriptRoot
 if ([string]::IsNullOrEmpty($OutPath)) {
 	$outDir = "$($scriptDir)\output"
 } else {
-#	$outDir = "$($OutPath)\output"
+	#	$outDir = "$($OutPath)\output"
 	$outDir = "$($OutPath)"
 }
 
@@ -393,37 +386,27 @@ $log = "$($log).log"
 Write-log -toConsole $Details -id 55 -msg "process-ResourceScrape.ps1 Version: $($myVer)"
 Write-log -toConsole $Details -id 57 -msg "Input File: $($inFile)"
 
-#Write-Host "`nprocess-ResourceScrape.ps1 Version: $($myVer)"
-#Write-Host "File: $($infile)"
-
 # Test for the existence of the Rules file
 if (-not ([string]::IsNullOrEmpty($rulesFile))) {
 	if (-not (Test-Path -Path $rulesFile -PathType Leaf)) {
-		$rulesFile = "rules.xml"
+		$rulesFile = "$($scriptDir)\rules.xml"
 	}
 } else {
-	$rulesFile = "rules.xml"
+	$rulesFile = "$($scriptDir)\rules.xml"
 }
 Write-log -toConsole $Details -id 58 -msg "Using Rules File: $($rulesFile)"
-#	[xml]$rules = Get-Content -Path "C:\Users\WayneKlapwyk\OneDrive - Skillable\Documents\A - Lab Ops\OKRs\2024\Automate ACP\GitRepo\processScrape\rules.xml"
 
 if (Test-Path $file -PathType Leaf) {
-#	Write-Host "`nFile Found. Processing... `n"
 	Write-log -toConsole $Details -id 59 -msg "Input File Found. Continuing... `n"
 	
 	# Read the JSON file Resource Scrape
-	$jsonScrape = Get-Content -Path $File -Raw
-	
-	# Convert the JSON Resource Scrape into a list
-	$jsonObjects = $jsonScrape | ConvertFrom-Json
-	
-	$sortObjects = $jsonObjects.Resources | Sort-Object -Property "Name"
+	$jsonScrape = Get-Content -Path $File -Raw | ConvertFrom-Json
 	
 	# Start building the HTML table markup
 	$htmlTable = "`n<table id='resTable' style='width:800px'>`n"
 	
-#	# Get the property names from the first object to use as table headers
-	$headers = "","Name","Location","Resource Group","Resource Type",""
+	# Get the property names from the first object to use as table headers
+	$headers = "", "Name", "Location", "Resource Group", "Resource Type", ""
 	
 	# Add table headers
 	Write-log -toConsole $Details -id 61 -msg "Adding Table headers`n"
@@ -432,7 +415,7 @@ if (Test-Path $file -PathType Leaf) {
 	
 	# Add table rows
 	Write-log -toConsole $Details -id 62 -msg "Building the report body`n"
-	$htmlTable += (Build-Body -rowData $sortObjects)
+	$htmlTable += (Build-Body -rowData $jsonScrape)
 	
 	# Build the final initial ACP suggestion
 	Write-log -toConsole $Details -id 63 -msg "Building the initial ACP suggestion`n"
@@ -462,9 +445,6 @@ if (Test-Path $file -PathType Leaf) {
 	
 	# Construct the output file path with the new extension
 	Write-log -toConsole $Details -id 64 -msg "Defining the output files and paths`n"
-#	if ([string]::IsNullOrEmpty($dir)) { $dir = "." }
-#	$outFile = Join-Path -Path $dir -ChildPath "$($noExt).html"
-#	$outACP = (Join-Path -Path $dir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
 	$outFile = Join-Path -Path $outDir -ChildPath "$($noExt).html"
 	$outACP = (Join-Path -Path $outDir -ChildPath "$($noExt)").Replace("resourceScrape", "initialACP")
 	$outACP += ".json"
@@ -595,7 +575,7 @@ for (var i = 0; i < rows.length; i++) {
 	$htmlDocument | Out-File -FilePath $outFile -Encoding UTF8
 	
 	# Save the initial ACP to a file
-	$outElems| Out-File -FilePath $outACP -Encoding UTF8
+	$outElems | Out-File -FilePath $outACP -Encoding UTF8
 	
 	# Open the HTML document in the default web browser
 	if ($showHtml) {
@@ -603,7 +583,6 @@ for (var i = 0; i < rows.length; i++) {
 	}
 } else {
 	Write-log -toConsole $Details -id 10 -msg "Input file path is required. Please try again.`n"
-#	Write-Host "Input file path is required. Please try again."
 	throw "Invalid file or path. Please try again."
 	exit
 }
