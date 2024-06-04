@@ -204,7 +204,7 @@ function Create-TempFiles {
 	
 	# Create the Flag File
 	# This script will query for resources as long as this file exists
-	$file = New-Item -Path "$($inDir)\FlagFile.chk" -ItemType File -Force
+	$chkfile = New-Item -Path "$($inDir)\FlagFile.chk" -ItemType File -Force
 	
 	# Tell the user to delete the Flag File to stop the Resource Scrape utility
 	$msg = @"
@@ -317,6 +317,15 @@ function Is-Unique {
 		$jsn = Get-Content -Path "$($outDir)\output.tmp" -Raw | ConvertFrom-Json
 		
 		# Check if the record exists in the JSON object
+		Write-log -toConsole $Details -id 102 -msg "Searching output Directory: $($outDir)\output.tmp"
+		Write-log -toConsole $Details -id 103 -msg "Checking values:"
+		Write-log -toConsole $Details -id 103 -msg "  $($inRow.ResourceName)"
+		Write-log -toConsole $Details -id 103 -msg "  $($inRow.ResourceGroupName)"
+		Write-log -toConsole $Details -id 103 -msg "  $($inRow.ResourceType)"
+		Write-log -toConsole $Details -id 103 -msg "  $($inRow.ResourceLocation)"
+		Write-log -toConsole $Details -id 103 -msg "  $($inRow.ResourceId)"
+		Write-log -toConsole $Details -id 103 -msg "  $([string]$inRow.ResProperties)"
+		
 		$recordExists = $jsn | Where-Object {
 			$_.ResourceName -eq $inRow.ResourceName -and
 			$_.ResourceGroupName -eq $inRow.ResourceGroupName -and
@@ -328,14 +337,39 @@ function Is-Unique {
 		
 		# Output the result
 		if ($recordExists) {
-			Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($inRow.ResourceName)"
+			Write-log -toConsole $Details -id 104 -msg "  Record Found: $($recordExists)"
 			$retVal = $false
+		} else {
+			Write-log -toConsole $Details -id 105 -msg "  Record Not Found: $($recordExists)"
 		}
 	} catch {
 		Show-Error -err $_ -id 4
 	}
 	
 	return $retVal
+}
+
+function Write-Stats {
+	param
+	(
+		[string]$groupName,
+		$groupResCount
+	)
+	
+	# Prepare the stats message
+	$msg = @"
+Scrape Passes:     $($script:cntPass)
+
+Num of Groups:     $($script:maxGroups)
+
+Current Group:     $($groupName)
+Group Resources:   $($groupResCount)
+
+Records Processed: $($script:cntRecords)
+"@
+	
+	# Write the update to teh stats file
+	Set-Content -Path $script:cntFile -Value $msg -Force -Encoding UTF8
 }
 
 function Run-Scrape {
@@ -348,6 +382,13 @@ function Run-Scrape {
 	$retVal = $false
 
 	try {
+		# Create a temporary statistics file if it doesn't exist'
+		if (-not [System.IO.File]::Exists("$($inDir)\CountFile.cnt")) {
+			$script:cntFile = New-Item -Path "$($inDir)\CountFile.cnt" -ItemType File -Force
+		} else {
+			$script:cntFile = "$($inDir)\CountFile.cnt"
+		}
+		
 		# Query the subscription for resources until the Flag File is removed
 		# or for a maximum of 10 hours
 		Do {
@@ -361,6 +402,7 @@ function Run-Scrape {
 			}
 			
 			# Loop through the list of Resource Groups
+			$script:maxGroups = $resourceGroups.Count
 			foreach ($resourceGroup in $resourceGroups) {
 				# Increment the Pass counter
 				$script:cntPass++
@@ -380,10 +422,18 @@ function Run-Scrape {
 					}
 				}
 				
+				# Update the Stats file
+				Write-Stats -groupName $resourceGroup.ResourceGroupName -groupResCount $resourceGroup.Count
+				
 				# Build the unified Resource Record
 				foreach ($resource in $resources) {
+					Write-log -toConsole $Details -id 100 -msg "Processing resource: $($resource.ResourceName)"
 					try {
-						$resourceDetails = Get-AzResource -ResourceId $resource.ResourceId -ExpandProperties
+						try {
+							$resourceDetails = Get-AzResource -ResourceId $resource.ResourceId -ExpandProperties
+						} catch {
+							Show-Error -err $_ -id 12
+						}
 						
 						# Get current timestamp
 						$timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -402,20 +452,38 @@ function Run-Scrape {
 							ResourceTags		  = $resourceDetails.Tags
 						}
 						
+						Write-log -toConsole $Details -id 100 -msg "Checking for a unique value: $($resource.ResourceName)"
 						if (Is-Unique -inRow $combinedResource) {
+							Write-log -toConsole $Details -id 106 -msg "Unique Record Found. Adding it to the output."
+							Write-log -toConsole $Details -id 106 -msg "Resource Record: $($combinedResource)"
+							
 							# Add the combined object to the array
-							$combinedResources += $combinedResource
+							Try {
+								$combinedResources.add($combinedResource)
+							} catch {
+								Write-log -toConsole $Details -id 107 -msg "Error Encountered: $($_)"
+								Write-log -toConsole $Details -id 107 -msg "Exception: $($_.Exception)"
+							}
 							
 							# Convert the combined resources array to JSON
 							$combinedResourcesJson = $combinedResources | ConvertTo-Json -Depth 50
+#							Write-log -toConsole $Details -id 107 -msg "Resource JSON Record: $($combinedResourcesJson)"
 							
 							# Export the Resource result to the JSON file
-							Set-Content -Path "$($inDir)\output.tmp" -Value $combinedResourcesJson
+							try {
+								Set-Content -Path "$($inDir)\output.tmp" -Value $combinedResourcesJson
+							} catch {
+								Write-log -toConsole $Details -id 108 -msg "Error writing Combined Resources JSON to the output.tmp file."
+							}
+							# Wait a second
+							Start-Sleep -Seconds 1
 							
 							# Increment the resource counter
 							$script:cntRecords++
+							Write-Stats -groupName $resourceGroup.ResourceGroupName -groupResCount $resourceGroup.Count
+						} else {
+							Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($resource.ResourceName)"
 						}
-						
 						
 					} catch {
 						if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
@@ -522,9 +590,30 @@ Full Resource Scrape file:    $($inDir)\$($inFilename)
 
 #####################################
 The get-ResourceScrape.ps1 utility has ended
+	
 "@
 	
 	Write-log -toConsole $Details -id 55 -msg $msg
+}
+
+function Get-ScriptDirectory {
+<#
+    .SYNOPSIS
+        Get-ScriptDirectory returns the proper location of the script.
+ 
+    .OUTPUTS
+        System.String
+   
+    .NOTES
+        Returns the correct path within a packaged executable.
+#>
+	[OutputType([string])]
+	param ()
+	if ($null -ne $hostinvocation) {
+		Split-Path $hostinvocation.MyCommand.path
+	} else {
+		Split-Path $script:MyInvocation.MyCommand.Path
+	}
 }
 
 #####################################
@@ -546,7 +635,9 @@ $timeId = Get-Date -Format "yyyyMMddHHmmss"
 $numDigits = $Username -replace '\D', ''
 
 # Get the script directory
-$scriptDir = $PSScriptRoot
+#$scriptDir = $PSScriptRoot
+#$scriptDir = (Get-Location).Path
+$scriptDir = Get-ScriptDirectory
 
 # Set up the output directory
 if ([string]::IsNullOrEmpty($OutPath)) {
@@ -554,9 +645,6 @@ if ([string]::IsNullOrEmpty($OutPath)) {
 } else {
 	$outDir = "$($OutPath)"
 }
-
-# Add the Time ID to the outDir if requested
-if ($Stamp) { $outDir = "$($outDir)_$($timeId)"}
 
 # Create the output directory if it doesn't exist
 if (-not (Test-Path -Path $outDir -PathType Container)) {
@@ -569,10 +657,17 @@ if ($Stamp) { $log = "$($log)_$($timeId)" }
 $log = "$($log).log"
 
 # Initialize an array to hold the combined resource data
-$combinedResources = @()
+$combinedResources = New-Object -TypeName System.Collections.ArrayList
 
 # Write the program version to the log file/screen
-Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer)"
+Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer) (wk)"
+
+Write-log -toConsole $Details -id 101 -msg "Subscription: $($SubscriptionId)"
+Write-log -toConsole $Details -id 101 -msg "Username:     $($Username)"
+Write-log -toConsole $Details -id 101 -msg "Password:     $($Password)"
+Write-log -toConsole $Details -id 101 -msg "Out Path:     $($OutPath)"
+Write-log -toConsole $Details -id 101 -msg "Details:      $($Details)"
+Write-log -toConsole $Details -id 101 -msg "Timestamp:    $($Stamp)"
 
 if (Set-Environment -inDir $scriptDir) {
 	if (Access-AzAccount -inUser $Username -inPswd $Password -inSubs $SubscriptionId) {
@@ -587,15 +682,13 @@ if (Set-Environment -inDir $scriptDir) {
 		
 		if (Run-Scrape -inDir $outDir) {
 			# Create a copy of the temporary file with the current date & time
-			$fileNameDate = "resourceScrape_" + (Get-Date).ToString("yyyyMMdd-HHmmss") + ".json"
+			$fileNameDate = "resourceScrape_$($timeId).json"
 			Copy-Item -Path "$($outDir)\output.tmp" -Destination "$($outDir)\$($fileNameDate)"
 			
 			Show-Results -inDir "$($outDir)" -inFilename "$($fileNameDate)"
 		} else {
 			$errTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-			Write-log -toConsole $Details -id 56 -msg "An error was encountered during the Resource Scrape process.`n$($_)"
-			
-			Show-Error -err $_ -id 8
+			Write-log -toConsole $Details -id 56 -msg "An error was encountered during the Resource Scrape process."
 		}
 	}
 }
