@@ -2,6 +2,106 @@
 	<resource type="Microsoft.alertsmanagement">
 		<enabled>true</enabled>
     </resource>
+	<resource type="Microsoft.ApiManagement">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.ApiManagement/service">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.App/ContainerApps">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>Microsoft.App/containerApps/template.containers[*].image</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
+            </field>
+			<field>
+				<name>id</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
+	</resource>
+	<resource type="Microsoft.App/managedEnvironments">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>managedEnvironment</value>
+            </field>
+			<field>
+				<name>id</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[concat('/resourceGroups/acr-sam-rg-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
+	</resource>
+	<resource type="Microsoft.Authorization">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Authorization/roleAssignments">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Automation">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Automation/automationAccounts">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Azure.Diagnostics">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.Compute">
+		<enabled>true</enabled>
+    </resource>
 	<resource type="Microsoft.Compute/disks">
 		<enabled>true</enabled>
     </resource>
@@ -84,13 +184,66 @@
 			</field>
 		</properties>
     </resource>
+	<resource type="Microsoft.ContainerInstance/ContainerGroups">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>osProfile.computername</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>1.5</value>
+            </field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>1</value>
+            </field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count</name>
+				<func>exists</func>
+				<valtype>bool</valtype>
+				<value>false</value>
+            </field>
+		</properties>
+	</resource>
 	<resource type="Microsoft.ContainerRegistry/registries">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Databricks">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.Insights">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.Insights/dataCollectionRules">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.EnterpriseCloud.Monitoring">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.EventHub">
@@ -106,6 +259,12 @@
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Insights/dataCollectionRules">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.KeyVault">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.KeyVault/vaults">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Logic/workflows">
@@ -159,6 +318,9 @@
 	<resource type="Microsoft.Network/virtualNetworks">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.OperationalInsights">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.OperationalInsights/workspaces">
 		<enabled>true</enabled>
 		<properties>
@@ -182,10 +344,31 @@
             </field>
 		</properties>
 	</resource>
+	<resource type="Microsoft.OperationsManagement/">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.OperationsManagement/solutions">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.RecoveryServices">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.RecoveryServices/vaults">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.RecoveryServices/vaults/replicationFabrics">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.RecoveryServices/vaults/replicationPolicies">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.ResourceHealth">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.ServiceFabric">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Sql">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Sql/servers">
@@ -252,6 +435,44 @@
             </field>
 		</properties>
 	</resource>
+	<resource type="Microsoft.SqlVirtualMachine">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.SqlVirtualMachine/SqlVirtualMachines">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+            </field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>osProfile.computername</value>
+            </field>
+			<field>
+				<name>id</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[concat('/resourceGroups/corp-data',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+            </field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+            </field>
+		</properties>
+	</resource>
 	<resource type="Microsoft.Storage">
 		<enabled>true</enabled>
 	</resource>
@@ -259,6 +480,9 @@
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.StorageSync/storageSyncServices">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Web">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Web/connections">
@@ -293,54 +517,10 @@
             </field>
 		</properties>
 	</resource>
-	<resource type="Microsoft.Web/sites">
+	<resource type="Microsoft.Web">
 		<enabled>true</enabled>
 	</resource>
-	<resource type="Microsoft.ContainerInstance/ContainerGroups">
+	<resource type="Microsoft.Web/sites">
 		<enabled>true</enabled>
-		<properties>
-			<field>
-				<name>provisioningState</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>Succeeded</value>
-            </field>
-			<field>
-				<name>name</name>
-				<func>equals</func>
-				<valtype>field</valtype>
-				<value>osProfile.computername</value>
-            </field>
-			<field>
-				<name>location</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>[resourceGroup().location]</value>
-            </field>
-			<field>
-				<name>location</name>
-				<func>notequals</func>
-				<valtype>literal</valtype>
-				<value>global</value>
-			</field>
-			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>1.5</value>
-            </field>
-			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>1</value>
-            </field>
-			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count</name>
-				<func>exists</func>
-				<valtype>bool</valtype>
-				<value>false</value>
-            </field>
-		</properties>
 	</resource>
 </resources>
