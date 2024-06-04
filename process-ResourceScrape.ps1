@@ -80,7 +80,7 @@ function Write-log {
 	# Get the Date/Time
 	$dte = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 	
-	# Write the message to the log file
+	# Appent the message to the log file
 	Write-Output "$($dte) (id:$($id)) $($msg)" | Out-file $log -append
 	
 	if ($toConsole) {
@@ -97,13 +97,20 @@ function Show-Error {
 		$err
 	)
 	
+	# Get the current date/time
 	$errTime = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+	
+	# Retrieve the error message
 	$e = $err.Exception
 	$msg = $e.Message
+	
+	# parse the error message
 	while ($e.InnerException) {
 		$e = $e.InnerException
 		$msg += "`n" + $e.Message
 	}
+	
+	# write the update to the log file
 	Write-log -toConsole $Details -id $id -msg "Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 }
 
@@ -114,15 +121,20 @@ function ConvertTo-IndentedHtmlList {
 		[int]$IndentLevel = 0
 	)
 	
+	# Set the HTML indentation level
 	$indentation = ' ' * ($IndentLevel * 4)
 	$html = "$indentation<ul>"
 	
+	# Retrieve and convert the JSON properties
 	$objProperties = $object | ConvertTo-Json | ConvertFrom-Json
 	
+	# Cycle over all the properties
 	foreach ($property in $Object.PSObject.Properties) {
+		# retrieve the current property name and value
 		$propertyName = "$($property.Name)"
 		$propertyValue = $property.Value
 		
+		# Build the HTML element with proper indentation
 		$html += "$indentation    <li>$($propertyName): "
 		
 		if ($propertyValue -is [System.Management.Automation.PSCustomObject]) {
@@ -136,12 +148,12 @@ function ConvertTo-IndentedHtmlList {
 		} else {
 			$html += "$propertyValue"
 		}
-		
 		$html += "</li>"
 	}
 	
 	$html += "$indentation</ul>"
 	
+	# Return the built HTML
 	return $html
 }
 
@@ -153,7 +165,7 @@ function Add-headers {
 		$listHeaders
 	)
 	
-	# Build the header based on the input list
+	# Build the HTML headers based on the input list
 	$retHead = "  <thead><tr>`n"
 	$listHeaders | ForEach-Object {
 		if ([string]::IsNullOrEmpty($_)) {
@@ -167,27 +179,27 @@ function Add-headers {
 	return $retHead
 }
 
-function Add-propElement {
-	[CmdletBinding()]
-	param
-	(
-		$name,
-		$type,
-		$field
-	)
-	
-	$retProp = ""
-	
-	if ($type -eq "contains" -or $type -eq "in") {
-		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": [`""
-		foreach ($item in $name) { $retProp += "`"$item`"" }
-		$retProp += "`"    ]`n            }"
-	} else {
-		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": `"$($name)`"`n            }"
-	}
-	
-	return $retProp
-}
+#function Add-propElement {
+#	[CmdletBinding()]
+#	param
+#	(
+#		$name,
+#		$type,
+#		$field
+#	)
+#	
+#	$retProp = ""
+#	
+#	if ($type -eq "contains" -or $type -eq "in") {
+#		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": [`""
+#		foreach ($item in $name) { $retProp += "`"$item`"" }
+#		$retProp += "`"    ]`n            }"
+#	} else {
+#		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": `"$($name)`"`n            }"
+#	}
+#	
+#	return $retProp
+#}
 
 function Set-acp {
 	[CmdletBinding()]
@@ -287,7 +299,7 @@ function Build-Body {
 	$rowData | ForEach-Object {
 		$object = $_
 		if (-not ([string]::IsNullOrEmpty($object.ResourceName))) {
-				
+			
 			# determine the odd/even nature of the row and use the appropriate CSS class
 			$cssStyle = if ($cnt % 2 -eq 0) { "background-color: #ffffff;" } else { "background-color: #B3E5FC;" }
 			# Add the main row
@@ -307,7 +319,7 @@ function Build-Body {
 			$object | ForEach-Object {
 				if (-not ([string]::IsNullOrEmpty($_.ResProperties))) {
 					$retVal += "        <ul>`n"
-						
+					
 					try {
 						$jsnProps = $_.ResProperties | ConvertFrom-Json
 					} catch {
@@ -338,6 +350,25 @@ function Build-Body {
 	return $retVal
 }
 
+function Get-ScriptDirectory {
+<#
+    .SYNOPSIS
+        Get-ScriptDirectory returns the proper location of the script.
+ 
+    .OUTPUTS
+        System.String
+   
+    .NOTES
+        Returns the correct path within a packaged executable.
+#>
+	[OutputType([string])]
+	param ()
+	if ($null -ne $hostinvocation) {
+		Split-Path $hostinvocation.MyCommand.path
+	} else {
+		Split-Path $script:MyInvocation.MyCommand.Path
+	}
+}
 
 #####################################
 # M A I N  L I N E
@@ -359,18 +390,14 @@ $dir = Split-Path -Path $file -Parent
 $noExt = [System.IO.Path]::GetFileNameWithoutExtension($File)
 
 # Get the script directory
-$scriptDir = $PSScriptRoot
+$scriptDir = Get-ScriptDirectory
 
 # Set up the output directory
 if ([string]::IsNullOrEmpty($OutPath)) {
 	$outDir = "$($scriptDir)\output"
 } else {
-	#	$outDir = "$($OutPath)\output"
 	$outDir = "$($OutPath)"
 }
-
-# Add the Time ID to the outDir if requested
-if ($Stamp) { $outDir = "$($outDir)_$($timeId)" }
 
 # Create the output directory if it doesn't exist
 if (-not (Test-Path -Path $outDir -PathType Container)) {
@@ -478,14 +505,6 @@ if (Test-Path $file -PathType Leaf) {
 		background-color: #1E88E5; /* Header Row */
 		color: white;
 	}
-<!--
-    tr:nth-child(even) {
-        background-color: #FFFFFF; /* Even rows */
-    }
-    tr:nth-child(odd) {
-        background-color: #B3E5FC; /* Odd rows */
-    }
--->
 </style>
 </head>
 <body>
@@ -582,7 +601,7 @@ for (var i = 0; i < rows.length; i++) {
 		Invoke-Item $outFile
 	}
 } else {
-	Write-log -toConsole $Details -id 10 -msg "Input file path is required. Please try again.`n"
+	Write-log -toConsole $Details -id 10 -msg "Input file path is required. Please try again.`nFile: $($file)"
 	throw "Invalid file or path. Please try again."
 	exit
 }
