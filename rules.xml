@@ -61,14 +61,14 @@
 			<field>
 				<name>name</name>
 				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>managedEnvironment</value>
+				<valtype>field</valtype>
+				<value>properties.name</value>
             </field>
 			<field>
 				<name>id</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[concat('/resourceGroups/acr-sam-rg-',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
+				<value>[concat('/resourceGroups/REPLACE PREFIX',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
             </field>
 			<field>
 				<name>location</name>
@@ -97,6 +97,12 @@
 		<enabled>true</enabled>
     </resource>
 	<resource type="Microsoft.Azure.Diagnostics">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.CognitiveServices">
+		<enabled>true</enabled>
+    </resource>
+	<resource type="Microsoft.CognitiveServices/accounts">
 		<enabled>true</enabled>
     </resource>
 	<resource type="Microsoft.Compute">
@@ -159,10 +165,10 @@
 				<value>Standard_A1_V2,Standard_B1_V2,Standard_V2s,Standard_C1_V2,Standard_DS1_V2</value>
             </field>
 			<field>
-				<name>virtualMachineProfile.storageProfile.imageReference.offer</name>
+				<name>offer</name>
 				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>aks</value>
+				<valtype>field</valtype>
+				<value>virtualMachineProfile.storageProfile.imageReference.offer</value>
             </field>
 			<field>
 				<name>sku_capacity</name>
@@ -197,7 +203,7 @@
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>osProfile.computername</value>
+				<value>name</value>
             </field>
 			<field>
 				<name>location</name>
@@ -384,7 +390,7 @@
 				<name>name</name>
 				<func>contains</func>
 				<valtype>literal</valtype>
-				<value>[concat('mssql',resourcegroup().tags.LabInstance)]</value>
+				<value>[concat('REPLACE SERVER PREFIX',resourcegroup().tags.LabInstance)]</value>
             </field>
 			<field>
 				<name>location</name>
@@ -451,7 +457,7 @@
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>osProfile.computername</value>
+				<value>name</value>
             </field>
 			<field>
 				<name>id</name>
@@ -501,13 +507,13 @@
 				<name>sku_Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>hardwareProfile.vmSize</value>
+				<value>sku.size</value>
             </field>
 			<field>
 				<name>sku_Tier</name>
 				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>Standard</value>
+				<valtype>field</valtype>
+				<value>sku.tier</value>
             </field>
 			<field>
 				<name>sku_Capacity</name>
