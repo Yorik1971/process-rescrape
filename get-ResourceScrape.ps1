@@ -178,7 +178,7 @@ function Access-AzAccount {
 		[string]$inSubs
 	)
 	
-	$retVal = $true
+	$retVal = $false
 	
 	try {
 		# Provide your Azure account credentials
@@ -186,8 +186,25 @@ function Access-AzAccount {
 		$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
 		
 		# Connect to your Azure account
-		$context = Connect-AzAccount -Credential $cred -SubscriptionId $inSubs -Scope process -ErrorAction Stop
+		Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login: $($inSubs)."
+#		$context = Connect-AzAccount -Credential $cred -SubscriptionId $inSubs -Scope process -ErrorAction Stop
+		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Stop
+		$script:tnt = $context.Context.Tenant.id
+		
+		# Reset the AZ Context
+		Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
+		$azContext = Set-AzContext -Subscription $SubscriptionId
+		
+		$retVal = $true
+				
 	} catch	{
+		$e = $err.Exception
+		$msg = $e.Message
+		while ($e.InnerException) {
+			$e = $e.InnerException
+			$msg += "`n" + $e.Message
+		}
+		Write-log -toConsole $Details -id $id -msg "Login Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 		Show-Error -err $_ -id 2
 	}
 	
@@ -394,9 +411,18 @@ function Run-Scrape {
 		Do {
 			# Retrieve the list of Resource Groups in the current Subscription
 			try {
+				Write-log -toConsole $Details -id 63 -msg "Attempting to retrieve the list of Resource Groups."
 				$resourceGroups = Get-AzResourceGroup -ErrorAction Stop
 			} catch {
 				if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
+					$e = $_.Exception
+					$msg = $e.Message
+					while ($e.InnerException) {
+						$e = $e.InnerException
+						$msg += "`n" + $e.Message
+					}
+					Write-log -toConsole $Details -id 62 -msg "Error $($e.HResult): $($e.Message)`n  Full Message: $($msg)"
+					
 					Show-Error -err "Auth" -id 10
 				}
 			}
@@ -622,7 +648,7 @@ function Get-ScriptDirectory {
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.0.3"
+$myVer = "1.0.33"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
@@ -660,7 +686,7 @@ $log = "$($log).log"
 $combinedResources = New-Object -TypeName System.Collections.ArrayList
 
 # Write the program version to the log file/screen
-Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer) (wk)"
+Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($myVer)"
 
 Write-log -toConsole $Details -id 101 -msg "Subscription: $($SubscriptionId)"
 Write-log -toConsole $Details -id 101 -msg "Username:     $($Username)"
@@ -671,6 +697,7 @@ Write-log -toConsole $Details -id 101 -msg "Timestamp:    $($Stamp)"
 
 if (Set-Environment -inDir $scriptDir) {
 	if (Access-AzAccount -inUser $Username -inPswd $Password -inSubs $SubscriptionId) {
+		Write-log -toConsole $Details -id 61 -msg "Successfully logged in."
 		# Initialize the Counters
 		$script:cntPass = 0
 		$script:cntRecords = 0
