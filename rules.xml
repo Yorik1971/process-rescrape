@@ -1,4 +1,4 @@
-<resources>
+<resources version="1.1.5">
 	<resource type="Microsoft.alertsmanagement">
 		<enabled>true</enabled>
     </resource>
@@ -26,8 +26,8 @@
 			<field>
 				<name>name</name>
 				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
+				<valtype>field</valtype>
+				<value>name</value>
             </field>
 			<field>
 				<name>id</name>
@@ -62,7 +62,7 @@
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>properties.name</value>
+				<value>name</value>
             </field>
 			<field>
 				<name>id</name>
@@ -127,7 +127,7 @@
 				<value>osProfile.computername</value>
             </field>
 			<field>
-				<name>sku_Name</name>
+				<name>sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>hardwareProfile.vmSize</value>
@@ -159,10 +159,10 @@
 				<value>Succeeded</value>
 	        </field>
 			<field>
-				<name>sku_Name</name>
+				<name>sku.Name</name>
 				<func>in</func>
 				<valtype>literal</valtype>
-				<value>Standard_A1_V2,Standard_B1_V2,Standard_V2s,Standard_C1_V2,Standard_DS1_V2</value>
+				<value>sku.Name</value>
             </field>
 			<field>
 				<name>offer</name>
@@ -171,10 +171,10 @@
 				<value>virtualMachineProfile.storageProfile.imageReference.offer</value>
             </field>
 			<field>
-				<name>sku_capacity</name>
+				<name>sku.capacity</name>
 				<func>lessOrEquals</func>
-				<valtype>literal</valtype>
-				<value>3</value>
+				<valtype>field</valtype>
+				<value>sku.capacity</value>
             </field>
 			<field>
 				<name>location</name>
@@ -416,22 +416,22 @@
 				<value>Succeeded</value>
             </field>
 			<field>
-				<name>sku_Name</name>
-				<func>in</func>
-				<valtype>literal</valtype>
-				<value>S0,GP_S_Gen5,GP_S_Gen5_1,System</value>
+				<name>sku.Name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.name</value>
             </field>
 			<field>
-				<name>sku_Tier</name>
-				<func>in</func>
-				<valtype>literal</valtype>
-				<value>GeneralPurpose,System,Standard</value>
+				<name>sku.Tier</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.tier</value>
             </field>
 			<field>
-				<name>sku_Capacity</name>
+				<name>sku.Capacity</name>
 				<func>lessOrEquals</func>
-				<valtype>literal</valtype>
-				<value>10</value>
+				<valtype>field</valtype>
+				<value>sku.capacity</value>
             </field>
 			<field>
 				<name>location</name>
@@ -504,22 +504,22 @@
 				<value>Succeeded</value>
             </field>
 			<field>
-				<name>sku_Name</name>
+				<name>sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.size</value>
             </field>
 			<field>
-				<name>sku_Tier</name>
+				<name>sku.Tier</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.tier</value>
             </field>
 			<field>
-				<name>sku_Capacity</name>
+				<name>sku.Capacity</name>
 				<func>lessOrEquals</func>
-				<valtype>literal</valtype>
-				<value>1</value>
+				<valtype>field</valtype>
+				<value>sku.skuCapacity.maximum</value>
             </field>
 		</properties>
 	</resource>
