@@ -17,6 +17,26 @@ function Set-OutputPath {
 }
 
 $frmMain_Load={
+	# Set the current Directory
+	#$script:curDir = $PSScriptRoot
+	#$script:curDir = (Get-Location).Path
+	$scriptDir = Get-ScriptDirectory
+	if ($scriptDir.Count -eq 1) {
+		$script:curDir = $scriptDir
+	} else {
+		$script:curDir = $scriptDir[$scriptDir.Count - 1]
+	}
+	# Check for the backup INI file
+	if ([System.IO.File]::Exists("$($script:curDir)\ResourceScrape.bak")) {
+		Copy-Item -Path "$($script:curDir)\ResourceScrape.bak" -Destination "$($script:curDir)\ResourceScrape.ini"
+	}
+	# Read the ini file
+	$script:iniFile = get-inifile -filePath "$($script:curDir)\ResourceScrape.ini"
+#	# Script Version
+#	$myVer = "1.1.1"
+	
+#	[System.Windows.Forms.MessageBox]::Show($frmMain, "Script Path: $($script:curDir)", "Script Path", "OK", [System.Windows.Forms.MessageBoxIcon]::Information)
+	
 	# Make the initial group box the main one
 	$grpRequestScrape.Dock = 'Fill'
 	$grpRequestScrape.Visible = $true
@@ -31,11 +51,11 @@ $frmMain_Load={
 	$hover.SetToolTip($radGCP, "Coming Soon")
 	
 	# Set the starting environment values based on the ini file
-	Set-ControlTheme -Control $frmMain -Theme $iniFile.guienvironment.theme
-	$txtPath.Text = $iniFile.guienvironment.outPath
-	if ($iniFile.guienvironment.logDetails -eq "true") { $chkDetails.Checked = $true } else { $chkDetails.Checked = $false }
-	if ($iniFile.guienvironment.useTimestamp -eq "true") { $chkTimeStamp.Checked = $true } else { $chkTimeStamp.Checked = $false }
-	if ($iniFile.guienvironment.displayHTML -eq "true") { $chkDisplayResults.Checked = $true } else { $chkDisplayResults.Checked = $false }
+	Set-ControlTheme -Control $frmMain -Theme $script:iniFile.guienvironment.theme
+	$txtPath.Text = $script:iniFile.guienvironment.outPath
+	if ($script:iniFile.guienvironment.logDetails -eq "true") { $chkDetails.Checked = $true } else { $chkDetails.Checked = $false }
+	if ($script:iniFile.guienvironment.useTimestamp -eq "true") { $chkTimeStamp.Checked = $true } else { $chkTimeStamp.Checked = $false }
+	if ($script:iniFile.guienvironment.displayHTML -eq "true") { $chkDisplayResults.Checked = $true } else { $chkDisplayResults.Checked = $false }
 	
 	# Get the local version
 	$lclVersionMSI = (Get-Version -software 'Skillable Cloud Harbor').Version
@@ -52,26 +72,26 @@ $frmMain_Load={
 
 $frmMain.add_Closed({
 		# Set the ini file path
-		$outFile = "$($curDir)\ResourceScrape.ini"
+		$outFile = "$($script:curDir)\ResourceScrape.ini"
 		
 		# Set the current Environment values
-		if ($frmMain.BackColor.Name -eq "WhiteSmoke") { $iniFile["guienvironment"]["theme"] = "Light" } else { $iniFile["guienvironment"]["theme"] = "Dark" }
-		$iniFile["guienvironment"]["outPath"] = $txtPath.Text
-		if ($chkDetails.Checked) { $iniFile["guienvironment"]["logDetails"] = "true" } else { $iniFile["guienvironment"]["logDetails"] = "false" }
-		if ($chkTimeStamp.Checked) { $iniFile["guienvironment"]["useTimestamp"] = "true" } else { $iniFile["guienvironment"]["useTimestamp"] = "false" }
-		if ($chkDisplayResults.Checked) { $iniFile["guienvironment"]["displayHTML"] = "true" } else { $iniFile["guienvironment"]["displayHTML"] = "false" }
+		if ($frmMain.BackColor.Name -eq "WhiteSmoke") { $script:iniFile["guienvironment"]["theme"] = "Light" } else { $script:iniFile["guienvironment"]["theme"] = "Dark" }
+		$script:iniFile["guienvironment"]["outPath"] = $txtPath.Text
+		if ($chkDetails.Checked) { $script:iniFile["guienvironment"]["logDetails"] = "true" } else { $script:iniFile["guienvironment"]["logDetails"] = "false" }
+		if ($chkTimeStamp.Checked) { $script:iniFile["guienvironment"]["useTimestamp"] = "true" } else { $script:iniFile["guienvironment"]["useTimestamp"] = "false" }
+		if ($chkDisplayResults.Checked) { $script:iniFile["guienvironment"]["displayHTML"] = "true" } else { $script:iniFile["guienvironment"]["displayHTML"] = "false" }
 		
 		# Write the ini File values back to the file
-		Set-IniFile -iniObject $iniFile -Path $outFile
-		Copy-Item -Path "$($curDir)\ResourceScrape.ini" -Destination "$($curDir)\ResourceScrape.bak"
+		Set-IniFile -iniObject $script:iniFile -Path $outFile
+		Copy-Item -Path $outFile -Destination "$($script:curDir)\ResourceScrape.bak"
 	}
 )
 
-$darkToolStripMenuItem_Click={
+$mnuThemeDark_Click={
 	Set-ControlTheme -Control $frmMain -Theme "Dark"
 }
 
-$lightToolStripMenuItem_Click={
+$mnuThemeLight_Click={
 	Set-ControlTheme -Control $frmMain -Theme "Light"
 }
 
@@ -112,7 +132,7 @@ Waiting for the final output file.
 					# if the JSON file is found Kick off the ACP Process utility
 					if (Test-Path -Path "$($txtGetPath.Text)\$($jsnFile)" -PathType Leaf) {
 						# Confirm that the Resource Scrape processor existss
-						$prcScrape = "$($curDir)\process-ResourceScrape.ps1"
+						$prcScrape = "$($script:curDir)\process-ResourceScrape.ps1"
 						if (Test-Path -Path $prcScrape -PathType Leaf) {
 							$txtStats.Text = @"
 The final output file has been found.
@@ -154,7 +174,7 @@ Starting the Resource Scrape processor.
 								} else {
 									& $cmd -file $fil -rulesFile $rul -OutPath $pth 
 								}
-							} -ArgumentList $prcScrape, "$($txtGetPath.Text)\$jsnFile", $chkDisplayResults.Checked, "$($curDir)\rules.xml", $txtGetPath.Text, $chkDetails.Checked, $chkTimeStamp.Checked
+							} -ArgumentList $prcScrape, "$($txtGetPath.Text)\$jsnFile", $chkDisplayResults.Checked, "$($script:curDir)\rules.xml", $txtGetPath.Text, $chkDetails.Checked, $chkTimeStamp.Checked
 							
 							# Optionally, wait for the job to complete and get the results
 							$jobScrape | Wait-Job | Receive-Job
@@ -534,7 +554,7 @@ function Select-FolderDialog {
 	}
 }
 
-$exitToolStripMenuItem1_Click={
+$mnuExit_Click={
 	# Close the main form
 	$frmMain.Close()
 }
@@ -560,7 +580,7 @@ $btnStartScrape_Click = {
 			$txtRequestResult.Text = "The Output Path field can not be blank."
 			$txtRequestResult.ForeColor = [System.Drawing.Color]::Red
 		} else {
-			if (Test-Path -Path "$($curDir)\get-ResourceScrape.ps1" -PathType Leaf) {
+			if (Test-Path -Path "$($script:curDir)\get-ResourceScrape.ps1" -PathType Leaf) {
 				# Set the default msg for the Stats text box
 				$txtStats.Text = @"
 Launching the Resource Scrape. 
@@ -584,7 +604,7 @@ Please be patient.
 				$txtGetResult.ForeColor = [System.Drawing.Color]::Lime
 				
 				# Call the Get-ResourceScrape utility
-				$getScrape = "$($curDir)\get-ResourceScrape.ps1"
+				$getScrape = "$($script:curDir)\get-ResourceScrape.ps1"
 				# Set up the parameters
 				if ($chkTimeStamp.Checked -and $chkDetails.Checked) {
 					$params = @{
@@ -632,7 +652,7 @@ Please be patient.
 				$timScrape.Start()
 				
 			} else {
-				$txtRequestResult.Text = "Could not find the 'get-ResourceScrape.ps1' utility in $($curDir)."
+				$txtRequestResult.Text = "Could not find the 'get-ResourceScrape.ps1' utility in $($script:curDir)."
 				$txtRequestResult.ForeColor = [System.Drawing.Color]::Red
 			}
 		}
@@ -657,24 +677,34 @@ $btnCancel.add_Click({
 	}
 )
 
-function Get-ScriptDirectory {
 <#
-    .SYNOPSIS
-        Get-ScriptDirectory returns the proper location of the script.
- 
-    .OUTPUTS
-        System.String
-   
-    .NOTES
-        Returns the correct path within a packaged executable.
+	.SYNOPSIS
+		Get-ScriptDirectory returns the proper location of the script.
+	
+	.DESCRIPTION
+		A detailed description of the Get-ScriptDirectory function.
+	
+	.OUTPUTS
+		System.String
+	
+	.NOTES
+		Returns the correct path within a packaged executable.
 #>
+function Get-ScriptDirectory {
 	[OutputType([string])]
 	param ()
+	
+	$retVal = ""
 	if ($null -ne $hostinvocation) {
-		Split-Path $hostinvocation.MyCommand.path
+		$retVal = Split-Path $hostinvocation.MyCommand.path
 	} else {
-		Split-Path $script:MyInvocation.MyCommand.Path
+		$retVal = Split-Path $script:MyInvocation.MyCommand.Path
 	}
+	
+#	[System.Windows.Forms.MessageBox]::Show("Script Path: $($retVal)", "Script Path", "OK", [System.Windows.Forms.MessageBoxIcon]::Information)
+	
+	return $retVal
+	
 }
 
 $jobScrape = $null
@@ -924,23 +954,17 @@ $btnGetPath_Click={
 	}
 }
 
-# Set the current Directory
-#$curDir = $PSScriptRoot
-#$curDir = (Get-Location).Path
-$curDir = Get-ScriptDirectory
-# Check for the backup INI file
-if ([System.IO.File]::Exists("$($curDir)\ResourceScrape.bak")) {
-	Copy-Item -Path "$($curDir)\ResourceScrape.bak" -Destination "$($curDir)\ResourceScrape.ini"
-}
-# Read the ini file
-$iniFile = get-inifile -filePath "$($curDir)\ResourceScrape.ini"
+#$scriptDir = ""
+#$script:curDir = ""
+#$script:iniFile = ""
+
 # Script Version
-$myVer = "1.0.22"
+$myVer = "1.1.1"
 
 $mnuHelp_Click={
 	# Define the local version information
 	$lclVersionHdr = "Local Versions`n`n"
-	$lclVersionInfo = "GUI Forms: $($iniFile["versions"]["ResourceScraper.psf"])`nget-ResourceScrape: $($iniFile["versions"]["getResourceScrape.ps1"])`nprocess-ResourceScrape: $($iniFile["versions"]["processResourceScrape.ps1"])`nRules File: $($iniFile["versions"]["rules.xml"])"
+	$lclVersionInfo = "GUI Forms: $($script:iniFile["versions"]["ResourceScraper.psf"])`nget-ResourceScrape: $($script:iniFile["versions"]["getResourceScrape.ps1"])`nprocess-ResourceScrape: $($script:iniFile["versions"]["processResourceScrape.ps1"])`nRules File: $($script:iniFile["versions"]["rules.xml"])"
 	$lclVersionMSI = "`nSkillable Cloud Harbor: " + (Get-Version -software 'Skillable Cloud Harbor').Version
 	
 	# Get the remote version from GitHub
@@ -960,7 +984,7 @@ $mnuHelp_Click={
 		$versionMsg += "`n`nA new version of the Cloud Harbor installer is available."
 		$showDownload = $true
 	} else {
-		$versionMsg += "`n`nYou have installed the latest version of the Skillable`nCloud Harbor package. An installer is not available`nfor any out-of-date components. Contact your`nadministrator."
+		$versionMsg += "`n`nUp-To-Date`nYou have installed the latest version of the Skillable`nCloud Harbor package. An installer is not available`nfor any out-of-date components."
 	}
 	
 	# Create the form
@@ -985,7 +1009,7 @@ $mnuHelp_Click={
 		$linkLabel = New-Object System.Windows.Forms.LinkLabel
 		$linkLabel.Text = "Download the Cloud Harbor Installer"
 		$linkLabel.AutoSize = $true
-		$linkLabel.Location = New-Object System.Drawing.Point(50, 230)
+		$linkLabel.Location = New-Object System.Drawing.Point(50, 250)
 		$linkLabel.Links.Add(0, $linkLabel.Text.Length, "https://github.com/Yorik1971/process-rescrape/raw/main/Skillable%20Resource%20Scraper.msi")
 		$linkLabel.SendToBack()
 		
