@@ -1,4 +1,4 @@
-<#
+﻿<#
 	.SYNOPSIS
 		Build the Tenant-Based Input Parameters
 	
@@ -188,8 +188,14 @@ function Access-AzAccount {
 		# Connect to your Azure account
 		Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login: $($inSubs)."
 #		$context = Connect-AzAccount -Credential $cred -SubscriptionId $inSubs -Scope process -ErrorAction Stop
-		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Stop
+#		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Stop
+		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
 		$script:tnt = $context.Context.Tenant.id
+		if (Get-AzConfig | Where-Object { $_.Key -eq "EnableLoginByWam"	}) {
+			$disWAM = Update-AzConfig -EnableLoginByWam $false
+			$disCon = Disconnect-AzAccount
+			$context = Connect-AzAccount -Credential $cred -Subscription $subs -Tenant $tnnt
+		}
 		
 		# Reset the AZ Context
 		Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
@@ -648,7 +654,7 @@ function Get-ScriptDirectory {
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.0.33"
+$myVer = "1.0.34"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }

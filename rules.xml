@@ -16,31 +16,31 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>Microsoft.App/containerApps/template.containers[*].image</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>name</value>
-            </field>
+			</field>
 			<field>
 				<name>id</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>NEED RESOURCE SCRAPE FIELD NAME/VALUE - UPDATE RULES.XML</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -57,25 +57,25 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>name</value>
-            </field>
+			</field>
 			<field>
 				<name>id</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[concat('/resourceGroups/REPLACE PREFIX',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -119,25 +119,25 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>osProfile.computername</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>hardwareProfile.vmSize</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -157,31 +157,31 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-	        </field>
+			</field>
 			<field>
 				<name>sku.Name</name>
 				<func>in</func>
 				<valtype>literal</valtype>
 				<value>sku.Name</value>
-            </field>
+			</field>
 			<field>
 				<name>offer</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>virtualMachineProfile.storageProfile.imageReference.offer</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.capacity</name>
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>sku.capacity</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -198,19 +198,19 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>name</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -222,13 +222,13 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>1.5</value>
-            </field>
+			</field>
 			<field>
 				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>1</value>
-            </field>
+			</field>
 			<field>
 				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count</name>
 				<func>exists</func>
@@ -335,13 +335,13 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -385,19 +385,19 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>contains</func>
 				<valtype>literal</valtype>
 				<value>[concat('REPLACE SERVER PREFIX',resourcegroup().tags.LabInstance)]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -414,25 +414,25 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.name</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Tier</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.tier</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Capacity</name>
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>sku.capacity</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -452,25 +452,25 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>name</value>
-            </field>
+			</field>
 			<field>
 				<name>id</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[concat('/resourceGroups/corp-data',resourcegroup().tags.LODManaged,resourcegroup().tags.LabInstance,'/')]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
-            </field>
+			</field>
 			<field>
 				<name>location</name>
 				<func>notequals</func>
@@ -502,25 +502,25 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.size</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Tier</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.tier</value>
-            </field>
+			</field>
 			<field>
 				<name>sku.Capacity</name>
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>sku.skuCapacity.maximum</value>
-            </field>
+			</field>
 		</properties>
 	</resource>
 	<resource type="Microsoft.Web">
