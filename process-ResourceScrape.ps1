@@ -1,4 +1,4 @@
-<#
+﻿<#
 	.SYNOPSIS
 		A brief description of the  file.
 	
@@ -466,7 +466,7 @@ if (Test-Path $file -PathType Leaf) {
 	
 	# Add the final Type Group to the ACP suggestion
 	if ($group.Length -gt 0) { [void]$outElems.Add($group) }
-	[void]$outElems.Add("                    ]`n                }`n            ]`n        }`n    },`n    `"then`": {`n        `"effect`": `"Deny`"`n    }`n}")
+	[void]$outElems.Add("                    ]`n                }`n            ]`n        }`n    },`n    `"then`": {`n        `"effect`": `"deny`"`n    }`n}")
 	# Add the opening "If" statement to the outElems array
 	[void]$outElems.Insert(0, "{`n    `"if`": {`n        `"not`": {`n            `"anyOf`": [`n")
 	
@@ -516,7 +516,7 @@ $htmlTable
 <td>&nbsp;&nbsp;&nbsp;</td>
 <td style='width:800px'>
     <strong>Download Initial ACP&nbsp;&nbsp;-&nbsp;&nbsp;<a href="$outACP" download>$inACPFile</a></strong><br>
-    <strong>ACP Documentation</strong>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;<a href="https://docs.learnondemandsystems.com/lod/acp-creation-process.md" target="_blank">ACP Documentation</a><br>
+    <strong>ACP Documentation</strong>&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;<a href="https://docs.skillable.com/docs/azure-access-control-policy-creation" target="_blank">ACP Documentation</a><br>
     <textarea id="initialACP" name="initialACP" rows="50" cols="100" onkeyup="textAreaAdjust(this)" style="overflow:hidden; overflow-y:scroll;">$outElems</textarea><br>
 	<strong>Supported ACP Conditions</strong><br>
 <ul>

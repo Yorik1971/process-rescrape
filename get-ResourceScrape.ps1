@@ -75,12 +75,21 @@ function Write-log {
 	# Get the Date/Time
 	$dte = "[{0:MM/dd/yy} {0:HH:mm:ss}]" -f (Get-Date)
 	
-	# Write the message to the log file
-	Write-Output "$($dte) (id:$($id)) $($msg)" | Out-file $log -append
+	# Create the message for the log file
+	#Write-Output "$($dte) (id:$($id)) $($msg)" | Out-file $log -append
+	$logMessage = "$($dte) (id:$($id)) $($msg)"
 	
+	# Display the message to the console if requested
 	if ($toConsole) {
 		Write-Host "$($dte) (id:$($id)) $($msg)"
 	}
+	
+	    # Buffer log messages and write them in bulk
+    $global:logBuffer += $logMessage + "`n"
+    if ($global:logBuffer.Length -gt 1000) {
+        $global:logBuffer | Out-File $log -Append
+        $global:logBuffer = ""
+    }
 }
 
 function Show-Error {
@@ -123,25 +132,72 @@ function Set-Environment {
 		# Install the Azure PowerShell module (if you haven't already)
 		Write-log -toConsole $Details -id 50 -msg "Verifying the local Powershell Azure environment."
 
-		If (Get-Module -ListAvailable -Name Az)	{
-			# Check the availability of the Azure Az module
-			Import-Module Az -ErrorAction Stop
-			Write-log -toConsole $Details -id 51 -msg "The Azure Az module is ready for use"
+#		If (Get-Module -ListAvailable -Name Az)	{
+#			# Check the availability of the Azure Az module
+#			Import-Module Az -ErrorAction Stop
+#			Write-log -toConsole $Details -id 51 -msg "The Azure Az module is ready for use"
+#		} else {
+#			# This utility requires the use of the Azure Az Powershell module.
+#			Write-log -toConsole $Details -id 52 -msg "This utility requires the use of the Azure Az Powershell module."
+#			Write-log -toConsole $Details -id 53 -msg "If you have not done so, please install this module as an administrator before proceeding using these commands:"
+#			Write-log -toConsole $Details -id 57 -msg "	 Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force"
+#			Write-log -toConsole $Details -id 58 -msg "	 Import-Module -Name Az"
+#		}
+		
+		if (-not (Get-Module -Name Az)) {
+			Import-Module Az -ErrorAction SilentlyContinue
+		}
+		if (Get-Module -Name Az) {
+			Write-log -toConsole $Details -id 51 -msg "The Azure Az module is loaded and ready for use"
 		} else {
 			# This utility requires the use of the Azure Az Powershell module.
 			Write-log -toConsole $Details -id 52 -msg "This utility requires the use of the Azure Az Powershell module."
 			Write-log -toConsole $Details -id 53 -msg "If you have not done so, please install this module as an administrator before proceeding using these commands:"
 			Write-log -toConsole $Details -id 57 -msg "	 Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force"
 			Write-log -toConsole $Details -id 58 -msg "	 Import-Module -Name Az"
+			$msg = @"
+This utility requires the use of the Azure Az Powershell module.
+If you have not done so, please install this module as an administrator before proceeding using these commands:
+
+    Install-Module -Name Az -Scope CurrentUser -AllowClobber -Force
+    NOTE: If prompted accepted with [A] to accept all and continue 
+
+    Import-Module -Name Az
+"@
+			[System.Windows.Forms.MessageBox]::Show($msg, 'Az Module Required', 'OK', 'Information')
 			
+			# Only launch the scrape if the Az module is installed
+			$retVal = $false
 		}
-	} catch	{
+	} catch {
 		Show-Error -err $_ -id 1
 		
 		$retVal = $false
 	}
 	
 	return $retVal
+}
+
+# Function to get API version for a resource type
+function Get-ApiVersion {
+	param
+	(
+		[string]$resourceType,
+		[string]$providerNamespace,
+		$headers
+	)
+	
+	# Providers URL
+	$providersUrl = "https://management.azure.com/subscriptions/$subscriptionId/providers/$($providerNamespace)?api-version=2021-04-01"
+	$providersResponse = Invoke-RestMethod -Uri $providersUrl -Headers $headers -Method GET
+	
+	# Find the matching resource type
+	$resourceTypeEntry = $providersResponse.resourceTypes | Where-Object {
+		$_.resourceType -eq $resourceType
+	}
+	
+	# Return the latest API version
+	return $resourceTypeEntry.apiVersions[0] # Usually, the first entry is the most recent version
 }
 
 <#
@@ -190,11 +246,11 @@ function Access-AzAccount {
 #		$context = Connect-AzAccount -Credential $cred -SubscriptionId $inSubs -Scope process -ErrorAction Stop
 #		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Stop
 		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
-		$script:tnt = $context.Context.Tenant.id
+		$tnnt = $context.Context.Tenant.id
 		if (Get-AzConfig | Where-Object { $_.Key -eq "EnableLoginByWam"	}) {
 			$disWAM = Update-AzConfig -EnableLoginByWam $false
 			$disCon = Disconnect-AzAccount
-			$context = Connect-AzAccount -Credential $cred -Subscription $subs -Tenant $tnnt
+			$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
 		}
 		
 		# Reset the AZ Context
@@ -323,7 +379,6 @@ function Build-outputRecord {
 	return $retObj
 }
 
-
 function Is-Unique {
 	[CmdletBinding()]
 	param
@@ -419,6 +474,25 @@ function Run-Scrape {
 			try {
 				Write-log -toConsole $Details -id 63 -msg "Attempting to retrieve the list of Resource Groups."
 				$resourceGroups = Get-AzResourceGroup -ErrorAction Stop
+				
+#				### Try using the API ###
+#				# Define the Azure Resource Explorer API URL
+				$subscriptionId = (Get-AzContext).Subscription.Id
+				$resourceManagerEndpoint = "https://management.azure.com"
+				$resourceGroupsUrl = "$resourceManagerEndpoint/subscriptions/$subscriptionId/resourcegroups?api-version=2021-04-01"
+#				
+				# Get the Azure AD Bearer Token
+				$accessToken = (Get-AzAccessToken -ResourceUrl https://management.azure.com).Token
+#				
+#				# Get the list of resource groups
+#				$response = Invoke-RestMethod -Uri $resourceGroupsUrl -Headers @{
+#					Authorization = "Bearer $accessToken"
+#				} -Method Get
+#				
+#				# Parse the resource groups
+#				$resourceGroups = $response.value
+#				### End using the API ###
+				
 			} catch {
 				if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
 					$e = $_.Exception
@@ -442,7 +516,20 @@ function Run-Scrape {
 				# Retrieve the list of Resources within each Resource Group
 				try {
 					$resources = Get-AzResource -ResourceGroupName $resourceGroup.ResourceGroupName -ErrorAction Stop
+					
+#					### Try using the API ###
+#					# Get resources in the resource group
+#					$resourceGroupName = $resourceGroup.Name
+#					# Note: The "&expand=properties" retrieves the full list of resource properties
+#					$resourcesUrl = "$resourceManagerEndpoint/subscriptions/$subscriptionId/resourcegroups/$resourceGroupName/resources?api-version=2021-04-01&expand=properties"
+#					$resourceResponse = Invoke-RestMethod -Uri $resourcesUrl -Headers @{
+#						Authorization = "Bearer $accessToken"
+#					} -Method Get
+#					$resources = $resourceResponse.value
+#					### End using the API ###
+					
 				} catch {
+#					### We are using the API now.
 					try {
 						$resources = Get-AzResource -ResourceGroupName $resourceGroup.ResourceGroupName -ExpandProperties -ErrorAction Stop
 					} catch {
@@ -455,12 +542,17 @@ function Run-Scrape {
 				}
 				
 				# Update the Stats file
+#				### Using the API has a different Resource Group Name
 				Write-Stats -groupName $resourceGroup.ResourceGroupName -groupResCount $resourceGroup.Count
+#				Write-Stats -groupName $resourceGroup.Name -groupResCount $resourceGroup.Count
 				
 				# Build the unified Resource Record
 				foreach ($resource in $resources) {
+#					### We are using the API now.
 					Write-log -toConsole $Details -id 100 -msg "Processing resource: $($resource.ResourceName)"
+#					Write-log -toConsole $Details -id 100 -msg "Processing resource: $($resource.Name)"
 					try {
+#						### The API already returns the expanded properties. This is not necessary
 						try {
 							$resourceDetails = Get-AzResource -ResourceId $resource.ResourceId -ExpandProperties
 						} catch {
@@ -470,21 +562,67 @@ function Run-Scrape {
 						# Get current timestamp
 						$timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 						
+						# Get the API Version
+						$resourceTypeFull = $resource.type # e.g., "Microsoft.Compute/virtualMachines"
+						$providerNamespace, $resourceType = $resourceTypeFull -split "/"
+						$headers = @{
+							Authorization = "Bearer $accessToken"
+							ContentType   = "application/json"
+						}
+						$apiVersion = Get-ApiVersion -resourceType $resourceType -providerNamespace $providerNamespace -headers $headers
+						
+						# Get the properties for the resource using the API
+						$resourceId = $resource.id
+						$resourceDetailsUrl = "https://management.azure.com$($resourceId)?api-version=$($apiVersion)"
+						$apiDetails = ""
+						$apiDetails = Invoke-RestMethod -Uri $resourceDetailsUrl -Headers @{
+							Authorization = "Bearer $accessToken"
+						} -Method GET
+						
 						# Create a custom object combining resource and resource group properties
+						### We are using the API. It returns different object names
+						#$combinedResource = [PSCustomObject]@{
+						#	Timestamp			  = $timeStamp
+						#	ResourceGroupName	  = $resourceGroup.ResourceGroupName
+						#	ResourceGroupLocation = $resourceGroup.Location
+						#	ResourceGroupTags	  = $resourceGroup.Tags
+						#	ResourceId		      = $resourceDetails.ResourceId
+						#	ResourceName		  = $resourceDetails.Name
+						#	ResourceType		  = $resourceDetails.ResourceType
+						#	ResourceLocation	  = $resourceDetails.Location
+						#	ResProperties         = $resourceDetails.Properties
+						#	ResourceTags		  = $resourceDetails.Tags
+						#}
 						$combinedResource = [PSCustomObject]@{
 							Timestamp			  = $timeStamp
 							ResourceGroupName	  = $resourceGroup.ResourceGroupName
 							ResourceGroupLocation = $resourceGroup.Location
 							ResourceGroupTags	  = $resourceGroup.Tags
-							ResourceId		      = $resourceDetails.ResourceId
-							ResourceName		  = $resourceDetails.Name
-							ResourceType		  = $resourceDetails.ResourceType
-							ResourceLocation	  = $resourceDetails.Location
-							ResProperties         = $resourceDetails.Properties
-							ResourceTags		  = $resourceDetails.Tags
+							ResourceId		      = $resource.ResourceId
+							ResourceName		  = $resource.Name
+							ResourceType		  = $resource.ResourceType
+							ResourceLocation	  = $resource.Location
+							ResourceSKU		      = $apiDetails.Sku
+							ResProperties		  = $resourceDetails.Properties
+							APIProperties         = $apiDetails.Properties
+							ResourceTags		  = $resource.Tags
 						}
-						
+#						$combinedResource = [PSCustomObject]@{
+#							Timestamp			  = $timeStamp
+#							ResourceGroupName	  = $resourceGroup.Name
+#							ResourceGroupLocation = $resourceGroup.Location
+#							ResourceGroupTags	  = $resourceGroup.Tags
+#							ResourceId		      = $resource.Id
+#							ResourceName		  = $resource.Name
+#							ResourceType		  = $resource.Type
+#							ResourceLocation	  = $resource.Location
+#							ResourceSKU		      = $resourceDetails.Sku
+#							ResProperties		  = $resourceDetails.Properties
+#							ResourceTags		  = $resource.Tags
+#						}
+#						### Using the API
 						Write-log -toConsole $Details -id 100 -msg "Checking for a unique value: $($resource.ResourceName)"
+#						Write-log -toConsole $Details -id 100 -msg "Checking for a unique value: $($resource.Name)"
 						if (Is-Unique -inRow $combinedResource) {
 							Write-log -toConsole $Details -id 106 -msg "Unique Record Found. Adding it to the output."
 							Write-log -toConsole $Details -id 106 -msg "Resource Record: $($combinedResource)"
@@ -512,22 +650,28 @@ function Run-Scrape {
 							
 							# Increment the resource counter
 							$script:cntRecords++
-							Write-Stats -groupName $resourceGroup.ResourceGroupName -groupResCount $resourceGroup.Count
+							### Using the API
+							#Write-Stats -groupName $resourceGroup.ResourceGroupName -groupResCount $resourceGroup.Count
+							Write-Stats -groupName $resourceGroup.Name -groupResCount $resourceGroup.Count
 						} else {
-							Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($resource.ResourceName)"
+							### Using the API
+							#Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($resource.ResourceName)"
+							Write-log -toConsole $Details -id 59 -msg "Record already exists for the resource: $($resource.Name)"
 						}
 						
 					} catch {
 						if (($_.Exception -Match "authentication unavailable") -or ($_.Exception -Match "does not have authorization")) {
-							Show-Error -err "Auth" -id 11
+							Show-Error -err "Auth" -id 13
+						} else {
+							Show-Error -err $_ -id 13
 						}
 					}
 				}
 			}
-			
-		} while ([System.IO.File]::Exists("$($inDir)\FlagFile.chk"))
-		
-		$retVal = $true
+		}
+		while ([System.IO.File]::Exists("$($inDir)\FlagFile.chk"))
+	
+	$retVal = $true
 		
 	} catch {
 		Show-Error -err $_ -id 7
