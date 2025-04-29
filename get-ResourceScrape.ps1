@@ -144,10 +144,10 @@ function Set-Environment {
 #			Write-log -toConsole $Details -id 58 -msg "	 Import-Module -Name Az"
 #		}
 		
-		if (-not (Get-Module -Name Az)) {
-			Import-Module Az -ErrorAction SilentlyContinue
-		}
-		if (Get-Module -Name Az) {
+#		if (-not (Get-Module -Name Az)) {
+#			Import-Module Az -ErrorAction SilentlyContinue
+#		}
+		if (Get-Module -ListAvailable -Name Az.Accounts) {
 			Write-log -toConsole $Details -id 51 -msg "The Azure Az module is loaded and ready for use"
 		} else {
 			# This utility requires the use of the Azure Az Powershell module.
@@ -482,7 +482,8 @@ function Run-Scrape {
 				$resourceGroupsUrl = "$resourceManagerEndpoint/subscriptions/$subscriptionId/resourcegroups?api-version=2021-04-01"
 #				
 				# Get the Azure AD Bearer Token
-				$accessToken = (Get-AzAccessToken -ResourceUrl https://management.azure.com).Token
+				#$accessToken = (Get-AzAccessToken -ResourceUrl https://management.azure.com).Token
+				$accessToken = (Get-AzAccessToken).Token
 #				
 #				# Get the list of resource groups
 #				$response = Invoke-RestMethod -Uri $resourceGroupsUrl -Headers @{
@@ -566,8 +567,8 @@ function Run-Scrape {
 						$resourceTypeFull = $resource.type # e.g., "Microsoft.Compute/virtualMachines"
 						$providerNamespace, $resourceType = $resourceTypeFull -split "/"
 						$headers = @{
-							Authorization = "Bearer $accessToken"
-							ContentType   = "application/json"
+							'Authorization' = "Bearer $($accessToken)"
+							'ContentType'   = "application/json"
 						}
 						$apiVersion = Get-ApiVersion -resourceType $resourceType -providerNamespace $providerNamespace -headers $headers
 						
@@ -798,7 +799,7 @@ function Get-ScriptDirectory {
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.0.34"
+$myVer = "1.1.3"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }

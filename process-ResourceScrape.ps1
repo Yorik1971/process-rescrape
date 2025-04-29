@@ -216,15 +216,20 @@ function Set-acp {
 	if (Test-Path -Path $rulesFile -PathType Leaf) {
 		[xml]$rules = Get-Content -Path $rulesFile
 		
+		# NEW - Find the row.ResourceType in the rules file
+		$rule = $rules.resources.resource | Where-Object {
+			$_.type -eq $row.ResourceType -and $_.enabled -eq 'true'
+		}
+		
 		# Find the row.ResourceType in the rules file
-		$cnt = 0
-		for ($x = 0; $x -lt $rules.resources.resource.count; $x++) {
-			$rule = $rules.resources.resource[$x]
+#		$cnt = 0
+#		for ($x = 0; $x -lt $rules.resources.resource.count; $x++) {
+#			$rule = $rules.resources.resource[$x]
 			
-			if ($rule.type -eq $row.ResourceType) {
+#			if ($rule.type -eq $row.ResourceType) {
 				Write-log -toConsole $Details -id 68 -msg "Rule has been found for $($rule.type).`n"
 				# only process the rule if it has been enabled. Otherwise, ignore it
-				if ($rule.enabled -eq "true") {
+#				if ($rule.enabled -eq "true") {
 					Write-log -toConsole $Details -id 69 -msg "Rule is enabled.`n"
 					# Check to see if any properties exist for this rule
 					if ($rule.properties -ne $null) {
@@ -274,10 +279,10 @@ function Set-acp {
 						if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
 					}
 					
-					break
-				}
-			}
-		}
+#					break
+#				}
+#			}
+#		}
 	} else {
 		Write-log -toConsole $Details -id 9 -msg "ERROR: Could not find the rules file. File: $($rules)`n"
 		$elem = ""
@@ -375,7 +380,7 @@ function Get-ScriptDirectory {
 #####################################
 
 # Script Version
-$myVer = "1.1.1"
+$myVer = "1.1.2"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
