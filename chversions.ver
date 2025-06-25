@@ -2,7 +2,7 @@
 [versions]
 getResourceScrape.ps1 = 1.1.2
 CloudHarbor.msi = 1.1.31.0
-rules.xml = 1.1.6
+rules.xml = 1.1.7
 Cloud Harbor.psf = 1.2.2
 controlAzureScrape = 0.0.1
 processResourceScrape.ps1 = 1.1.2
