@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources version="1.1.6">
+<resources version="1.1.7">
 	<resource type="Microsoft.AAD">
 		<enabled>true</enabled>
 	</resource>
@@ -2071,6 +2071,41 @@
 	<resource type="Microsoft.Automation/register">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.Automation/automationAccounts">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
+	</resource>
 	<resource type="Microsoft.Automation/automationAccounts/agentRegistrationInformation">
 		<enabled>true</enabled>
 	</resource>
@@ -2243,9 +2278,6 @@
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Automation/automationAccounts/convertGraphRunbookContent">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Automation/automationAccounts">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Automation/automationAccounts/listKeys">
@@ -4901,6 +4933,44 @@
 	</resource>
 	<resource type="Microsoft.CognitiveServices/accounts">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>Microsoft.CognitiveServices/accounts/sku.Name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>sku.Name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.CognitiveServices/accounts/joinPerimeter">
 		<enabled>true</enabled>
@@ -8293,6 +8363,18 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
+				<name>Microsoft.Compute/VirtualMachines/template.containers[*].image</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>template.containers.image</value>
+			</field>
+			<field>
+				<name>imageOffer</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[Image Offer]</value>
+			</field>
+			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
@@ -8305,9 +8387,6 @@
 				<value>global</value>
 			</field>
 		</properties>
-	</resource>
-	<resource type="Microsoft.Compute/virtualMachines">
-		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Compute/virtualMachines/start">
 		<enabled>true</enabled>
@@ -9071,27 +9150,18 @@
 				<value>containers.properties.image</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB</name>
-				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>containers.resources.requests.memoryInGB</value>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.cpu</name>
-				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>containers.resources.requests.cpu</value>
-			</field>
-			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.count</name>
-				<func>exists</func>
-				<valtype>bool</valtype>
-				<value>false</value>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
 			</field>
 		</properties>
-	</resource>
-	<resource type="Microsoft.ContainerInstance/containerGroups">
-		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.ContainerInstance/containerGroups/restart">
 		<enabled>true</enabled>
@@ -9203,6 +9273,38 @@
 	</resource>
 	<resource type="Microsoft.ContainerRegistry/registries">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.ContainerRegistry/registries/listCredentials">
 		<enabled>true</enabled>
@@ -9448,10 +9550,16 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].count</name>
-				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>agentPoolProfiles.count</value>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
 			</field>
 		</properties>
 	</resource>
@@ -11323,12 +11431,100 @@
 	</resource>
 	<resource type="Microsoft.Databricks">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.Sql/servers/databases/sku.name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>currentSku.name</value>
+			</field>
+			<field>
+				<name>Microsoft.Sql/servers/databases/sku.capacity</name>
+				<func>lessOrEquals</func>
+				<valtype>field</valtype>
+				<value>currentSku.capacity</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Databricks/register">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Databricks/workspaces">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.Sql/servers/databases/sku.name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>currentSku.name</value>
+			</field>
+			<field>
+				<name>Microsoft.Sql/servers/databases/sku.capacity</name>
+				<func>lessOrEquals</func>
+				<valtype>field</valtype>
+				<value>currentSku.capacity</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Databricks/workspaces/refreshPermissions">
 		<enabled>true</enabled>
@@ -12837,13 +13033,25 @@
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>Microsoft.DBforPostgreSQL.flexibleServers.sku.name</value>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
 			</field>
 		</properties>
 	</resource>
@@ -15593,6 +15801,50 @@
 	</resource>
 	<resource type="Microsoft.Fabric">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>Microsoft.Fabric/sku.name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.name</value>
+			</field>
+			<field>
+				<name>Microsoft.Fabric/sku.tier</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.tier</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>field</valtype>
+				<value>ResourceId</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Fabric/register">
 		<enabled>true</enabled>
@@ -19442,22 +19694,16 @@
 				<value>name</value>
 			</field>
 			<field>
+				<name>Microsoft.MachineLearningServices/workspaces/sku.name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.name</value>
+			</field>
+			<field>
 				<name>id</name>
 				<func>contains</func>
 				<valtype>literal</valtype>
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
-			</field>
-			<field>
-				<name>Microsoft.MachineLearningServices/workspaces/sku.name</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>[SKU NAME]</value>
-			</field>
-			<field>
-				<name>Microsoft.MachineLearningServices/workspaces/sku.tier</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>[SKU TIER]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -23689,6 +23935,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
 			</field>
 			<field>
 				<name>Microsoft.OperationalInsights/workspaces/sku.name</name>
@@ -28404,6 +28656,38 @@
 	</resource>
 	<resource type="Microsoft.ServiceFabric">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.ServiceFabric/register">
 		<enabled>true</enabled>
@@ -28946,6 +29230,12 @@
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>currentSku.capacity</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -30243,6 +30533,12 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
+				<name>Microsoft.SqlVirtualMachine/SqlVirtualMachines/sqlImageSku</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>[SQL IMAGE SKU - Developer]</value>
+			</field>
+			<field>
 				<name>location</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
@@ -30300,6 +30596,41 @@
 	</resource>
 	<resource type="Microsoft.Storage/locations/previewActions">
 		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Storage/storageAccounts">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Storage/storageAccounts/blobServices">
 		<enabled>true</enabled>
@@ -30425,9 +30756,6 @@
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Storage/storageAccounts/joinPerimeter">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Storage/storageAccounts">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Storage/storageAccounts/listAccountSas">
@@ -31032,6 +31360,38 @@
 	</resource>
 	<resource type="Microsoft.Synapse/workspaces">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Synapse/workspaces/checkDefaultStorageAccountStatus">
 		<enabled>true</enabled>
@@ -31532,6 +31892,18 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
 				<name>kind</name>
 				<func>in</func>
 				<valtype>literal</valtype>
@@ -31808,18 +32180,6 @@
 				<func>contains</func>
 				<valtype>literal</valtype>
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
-			</field>
-			<field>
-				<name>Microsoft.Web/serverFarms/maximumNumberOfWorkers</name>
-				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>maximumNumberOfWorkers</value>
-			</field>
-			<field>
-				<name>Microsoft.web/serverfarms/targetWorkerSizeId</name>
-				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>targetWorkerSizeId</value>
 			</field>
 			<field>
 				<name>location</name>
