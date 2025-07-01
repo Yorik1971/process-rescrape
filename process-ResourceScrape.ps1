@@ -23,15 +23,12 @@
 	.PARAMETER Stamp
 		Attach the datetime stamp to the output folder and some files
 	
-	.PARAMETER show-HTML
-		If you want to view the HTML output automatically include the show-HTML switch parameter
-	
 	.NOTES
 		===========================================================================
 		Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2023 v5.8.232
 		Created on:   	3/12/2024 1:55 PM
 		Created by:   	WayneKlapwyk
-		Organization: 	Skillable
+		Organization: 	WKUtils
 		Filename:     	process-ResourceScrape
 		===========================================================================
 #>

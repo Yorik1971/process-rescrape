@@ -30,7 +30,7 @@
 		Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2023 v5.8.232
 		Created on:   	2/22/2024 2:24 PM
 		Created by:   	Wayne Klapwyk
-		Organization: 	Skillable
+		Organization: 	WKUtils
 		Filename:     	get-ResourceScrape
 		===========================================================================
 #>
