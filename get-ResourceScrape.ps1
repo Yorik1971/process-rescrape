@@ -25,6 +25,9 @@
 	.PARAMETER Stamp
 		Attach the datetime stamp to the output folder and some files
 	
+	.PARAMETER TAPToken
+		A description of the TAPToken parameter.
+	
 	.NOTES
 		===========================================================================
 		Created with: 	SAPIEN Technologies, Inc., PowerShell Studio 2023 v5.8.232
@@ -48,9 +51,12 @@ param
 	[ValidatePattern('^([\w-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([\w-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$')]
 	[Alias('u')]
 	[string]$Username,
-	[Parameter(Mandatory = $true)]
+	[Parameter(Mandatory = $false)]
 	[Alias('p')]
 	[string]$Password,
+	[Parameter(Mandatory = $false)]
+	[Alias('t')]
+	[string]$TAPToken,
 	[Parameter(HelpMessage = 'Path to output files')]
 	[Alias('o')]
 	[string]$OutPath,
@@ -189,15 +195,35 @@ function Get-ApiVersion {
 	
 	# Providers URL
 	$providersUrl = "https://management.azure.com/subscriptions/$subscriptionId/providers/$($providerNamespace)?api-version=2021-04-01"
-	$providersResponse = Invoke-RestMethod -Uri $providersUrl -Headers $headers -Method GET
-	
-	# Find the matching resource type
-	$resourceTypeEntry = $providersResponse.resourceTypes | Where-Object {
-		$_.resourceType -eq $resourceType
+	try {
+		# Set TLS version
+		[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+		# Get Rest method
+#		try {
+			$providersResponse = Invoke-RestMethod -Uri $providersUrl -Headers $headers -Method GET
+#		} catch {
+#			Connect-AzAccount
+#			try {
+#				$providersResponse = Invoke-RestMethod -Uri $providersUrl -Headers $headers -Method GET
+#			} catch {
+#				throw $_
+#			}
+#		}
+		# Find the matching resource type
+		$resourceTypeEntry = $providersResponse.resourceTypes | Where-Object {
+			$_.resourceType -eq $resourceType
+		}
+		
+		# Return the latest API version
+		return $resourceTypeEntry.apiVersions[0] # Usually, the first entry is the most recent version
+	} catch {
+		Write-log -toConsole $Details -id 14 -msg "Invoke-RestMethod Error: $($_.FullyQualifiedErrorId): $($_.Exception.Message)"
+		throw "Invoke-RestMethod Error"
+		
+		# Return the error message
+		return "Invoke-RestMethod Error"
 	}
 	
-	# Return the latest API version
-	return $resourceTypeEntry.apiVersions[0] # Usually, the first entry is the most recent version
 }
 
 <#
@@ -222,6 +248,48 @@ function Get-ApiVersion {
 	.NOTES
 		
 #>
+
+#function Connect-WithTapFallback {
+#	param (
+#		[Parameter(Mandatory = $true)]
+#		[string]$TapToken,
+#		# The TAP (Azure AD access token)
+#		[Parameter(Mandatory = $true)]
+#		[string]$TenantId,
+#		# Azure AD tenant ID
+#		[Parameter(Mandatory = $true)]
+#		[string]$AccountId # UPN (user@domain) or AppId
+#	)
+#	
+#	try {
+#		Write-Host "🔑 Attempting to authenticate with TAP token..."
+#		$null = Connect-AzAccount -AccessToken $TapToken -Tenant $TenantId -AccountId $AccountId -ErrorAction Stop
+#		
+#		# Validate context
+#		$ctx = Get-AzContext
+#		if ($ctx -and $ctx.Subscription) {
+#			Write-Host "✅ Connected with TAP token. Subscription:" $ctx.Subscription.Name
+#			return $ctx
+#		} else {
+#			throw "Token authentication succeeded, but no subscription context was found."
+#		}
+#	} catch {
+#		Write-Warning "⚠️ TAP token authentication failed. Falling back to interactive login..."
+#		try {
+#			$null = Connect-AzAccount -Tenant $TenantId
+#			$ctx = Get-AzContext
+#			if ($ctx -and $ctx.Subscription) {
+#				Write-Host "✅ Connected interactively. Subscription:" $ctx.Subscription.Name
+#				return $ctx
+#			} else {
+#				throw "Password authentication succeeded, but no subscription context was found."
+#			}
+#		} catch {
+#			throw "⚠️ Both TAP token and Password authentication failed."
+#		}
+#	}
+#}
+
 function Access-AzAccount {
 	[CmdletBinding()]
 	param
@@ -231,44 +299,162 @@ function Access-AzAccount {
 		[Parameter(Mandatory = $true)]
 		[string]$inPswd,
 		[Parameter(Mandatory = $true)]
+		[string]$inTAP,
+		[Parameter(Mandatory = $true)]
 		[string]$inSubs
 	)
 	
 	$retVal = $false
 	
 	try {
-		# Provide your Azure account credentials
-		$pswd = ConvertTo-SecureString $inPswd -AsPlainText -Force
-		$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
+		Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login (Web): $($inSubs)."
 		
-		# Connect to your Azure account
-		Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login: $($inSubs)."
-#		$context = Connect-AzAccount -Credential $cred -SubscriptionId $inSubs -Scope process -ErrorAction Stop
-#		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Stop
-		$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
+#		Write-Host "🔑 Launching Web Login for Azure. Use the Temporary Access Pass (TAP) Token if requested. Otherwise, use the provided password..."
+		$context = Connect-AzAccount
+		
 		$tnnt = $context.Context.Tenant.id
-		if (Get-AzConfig | Where-Object { $_.Key -eq "EnableLoginByWam"	}) {
+		if (Get-AzConfig | Where-Object {
+				$_.Key -eq "EnableLoginByWam"
+			}) {
 			$disWAM = Update-AzConfig -EnableLoginByWam $false
-			$disCon = Disconnect-AzAccount
-			$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
+			$disCon = Disconnect-AzAccount -Username $Username
+#			# Provide your Azure account credentials with Password
+#			$pswd = ConvertTo-SecureString $inTAP -AsPlainText -Force
+#			$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
+#			
+##			$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
+			$context = Connect-AzAccount
 		}
 		
 		# Reset the AZ Context
 		Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
-		$azContext = Set-AzContext -Subscription $SubscriptionId
+		try {
+			$azContext = Set-AzContext -Subscription $SubscriptionId
+		} catch {
+			$e = $err.Exception
+			$msg = $e.Message
+			while ($e.InnerException) {
+				$e = $e.InnerException
+				$msg += "`n" + $e.Message
+			}
+			Write-log -toConsole $Details -id $id -msg "Set Context Error w/ Web $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+		}
 		
 		$retVal = $true
-				
-	} catch	{
+	} catch {
 		$e = $err.Exception
 		$msg = $e.Message
 		while ($e.InnerException) {
 			$e = $e.InnerException
 			$msg += "`n" + $e.Message
 		}
-		Write-log -toConsole $Details -id $id -msg "Login Error $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+		Write-log -toConsole $Details -id $id -msg "Login Error w/ Web $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
 		Show-Error -err $_ -id 2
 	}
+	
+#	if ($inTAP.Length -gt 0) {
+#		try {
+#			# Provide your Azure account credentials with Password
+#			$pswd = ConvertTo-SecureString $inTAP -AsPlainText -Force
+#			$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
+#			
+#			# Connect to your Azure account
+#			Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login (TAP): $($inSubs)."
+##			$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
+##			$context = Connect-AzAccount -AccessToken $inTAP -AccountId $inUser -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
+#			$context = Connect-AzAccount -AccessToken $inTAP -AccountId $inUser -Subscription $inSubs -ErrorAction Continue
+#			$tnnt = $context.Context.Tenant.id
+#			if (Get-AzConfig | Where-Object {
+#					$_.Key -eq "EnableLoginByWam"
+#				}) {
+#				$disWAM = Update-AzConfig -EnableLoginByWam $false
+#				$disCon = Disconnect-AzAccount
+#				$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
+#			}
+#			
+#			# Reset the AZ Context
+#			Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
+#			$azContext = Set-AzContext -Subscription $SubscriptionId
+#			
+#			$retVal = $true
+#		} catch {
+#			$e = $err.Exception
+#			$msg = $e.Message
+#			while ($e.InnerException) {
+#				$e = $e.InnerException
+#				$msg += "`n" + $e.Message
+#			}
+#			Write-log -toConsole $Details -id $id -msg "Login Error w/ TAP $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+#			Show-Error -err $_ -id 2
+#		}
+#	} else {
+#		# Try to validate with the password first, then the TAP if it is provided
+#		try {
+#			# Provide your Azure account credentials with Password
+#			$pswd = ConvertTo-SecureString $inPswd -AsPlainText -Force
+#			$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
+#			
+#			# Connect to your Azure account
+#			Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login (PSWD): $($inSubs)."
+#			$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
+#			$tnnt = $context.Context.Tenant.id
+#			if (Get-AzConfig | Where-Object { $_.Key -eq "EnableLoginByWam"	}) {
+#				$disWAM = Update-AzConfig -EnableLoginByWam $false
+#				$disCon = Disconnect-AzAccount
+#				$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
+#			}
+#			
+#			# Reset the AZ Context
+#			Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
+#			$azContext = Set-AzContext -Subscription $SubscriptionId
+#			
+#			$retVal = $true
+#		} catch {
+#			if ($inTAP.Length -gt 0) {
+#				try {
+#					# Provide your Azure account credentials with Password
+#					$pswd = ConvertTo-SecureString $inTAP -AsPlainText -Force
+#					$cred = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $inUser, $pswd
+#					
+#					# Connect to your Azure account
+#					Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login (TAP): $($inSubs)."
+#					$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Scope CurrentUser -ErrorAction Continue
+#					$tnnt = $context.Context.Tenant.id
+#					if (Get-AzConfig | Where-Object {
+#							$_.Key -eq "EnableLoginByWam"
+#						}) {
+#						$disWAM = Update-AzConfig -EnableLoginByWam $false
+#						$disCon = Disconnect-AzAccount
+#						$context = Connect-AzAccount -Credential $cred -Subscription $inSubs -Tenant $tnnt
+#					}
+#					
+#					# Reset the AZ Context
+#					Write-log -toConsole $Details -id 64 -msg "Attempting to set the AZ Context for subscription: $($SubscriptionId)."
+#					$azContext = Set-AzContext -Subscription $SubscriptionId
+#					
+#					$retVal = $true
+#				} catch {
+#					$e = $err.Exception
+#					$msg = $e.Message
+#					while ($e.InnerException) {
+#						$e = $e.InnerException
+#						$msg += "`n" + $e.Message
+#					}
+#					Write-log -toConsole $Details -id $id -msg "Login Error w/ TAP $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+#					Show-Error -err $_ -id 2
+#				}
+#			} else {
+#				$e = $err.Exception
+#				$msg = $e.Message
+#				while ($e.InnerException) {
+#					$e = $e.InnerException
+#					$msg += "`n" + $e.Message
+#				}
+#				Write-log -toConsole $Details -id $id -msg "Login Error w/ PSWD $($err.Exception.HResult): $($err.Message)`n  Full Message: $($msg)"
+#				Show-Error -err $_ -id 2
+#			}
+#		}
+#	}
 	
 	return $retVal
 }
@@ -483,8 +669,23 @@ function Run-Scrape {
 #				
 				# Get the Azure AD Bearer Token
 				#$accessToken = (Get-AzAccessToken -ResourceUrl https://management.azure.com).Token
-				$accessToken = (Get-AzAccessToken).Token
-#				
+				try {
+					$accessToken = [Runtime.InteropServices.Marshal]::PtrToStringAuto(
+						[Runtime.InteropServices.Marshal]::SecureStringToBSTR((Get-AzAccessToken).Token)
+					)
+				} catch {
+					$e = $_.Exception
+					$msg = $e.Message
+					while ($e.InnerException) {
+						$e = $e.InnerException
+						$msg += "`n" + $e.Message
+					}
+					Write-log -toConsole $Details -id 66 -msg "Access Token Error $($e.HResult): $($e.Message)`n  Full Message: $($msg)"
+					
+					Show-Error -err "Auth" -id 10
+				}
+				
+				#				
 #				# Get the list of resource groups
 #				$response = Invoke-RestMethod -Uri $resourceGroupsUrl -Headers @{
 #					Authorization = "Bearer $accessToken"
@@ -799,7 +1000,7 @@ function Get-ScriptDirectory {
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.1.3"
+$myVer = "1.1.5"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
@@ -842,12 +1043,13 @@ Write-log -toConsole $Details -id 55 -msg "get-ResourceScrape.ps1 Version: $($my
 Write-log -toConsole $Details -id 101 -msg "Subscription: $($SubscriptionId)"
 Write-log -toConsole $Details -id 101 -msg "Username:     $($Username)"
 Write-log -toConsole $Details -id 101 -msg "Password:     $($Password)"
+Write-log -toConsole $Details -id 101 -msg "TAP Token:    $($TAPToken)"
 Write-log -toConsole $Details -id 101 -msg "Out Path:     $($OutPath)"
 Write-log -toConsole $Details -id 101 -msg "Details:      $($Details)"
 Write-log -toConsole $Details -id 101 -msg "Timestamp:    $($Stamp)"
 
 if (Set-Environment -inDir $scriptDir) {
-	if (Access-AzAccount -inUser $Username -inPswd $Password -inSubs $SubscriptionId) {
+	if (Access-AzAccount -inUser $Username -inPswd $Password -inTAP $TAPToken -inSubs $SubscriptionId) {
 		Write-log -toConsole $Details -id 61 -msg "Successfully logged in."
 		# Initialize the Counters
 		$script:cntPass = 0

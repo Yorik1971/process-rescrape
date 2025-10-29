@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources version="1.1.10">
+<resources version="1.1.11">
 	<resource type="Microsoft.AAD">
 		<enabled>true</enabled>
 	</resource>
@@ -398,6 +398,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High - Sku.Capacity is recommended</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -1131,6 +1137,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium (Image is recommended)</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -1224,6 +1236,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -1523,6 +1541,50 @@
 	</resource>
 	<resource type="Microsoft.AppConfiguration/configurationStores">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.AppConfiguration/configurationStores/sku</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Value]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[resourceGroup().location]</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.AppConfiguration/configurationStores/ListKeys">
 		<enabled>true</enabled>
@@ -2125,6 +2187,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High - Restricted for High-Threat Audiences</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -2140,7 +2208,7 @@
 				<name>Microsoft.Automation/automationAccounts/sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>[SKU Name]</value>
+				<value>[SKU Name - Free or Basic]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -2260,6 +2328,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low - Ancilliary</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -2586,6 +2660,20 @@
 	</resource>
 	<resource type="Microsoft.AzureActiveDirectory/ciamDirectories">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Blocked - High-Threat Audience: Restricted</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.AzureArcData">
 		<enabled>true</enabled>
@@ -2922,6 +3010,20 @@
 	</resource>
 	<resource type="Microsoft.Batch/batchAccounts">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - High-Threat Audiences: Restricted</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.Batch/batchAccounts/listkeys">
 		<enabled>true</enabled>
@@ -5032,7 +5134,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[High-Compute - Required teardown LCA]</value>
+				<value>Risk: High (Compute/Orphans) - Requires Teardown LCA</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -5080,6 +5182,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low - Ancilliary</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8474,6 +8582,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -8510,6 +8624,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - Recommend ImageOffer, ImageId</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8662,6 +8782,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - Recommend Name Pattern when associated with VMSS</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8844,6 +8970,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9343,6 +9475,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - Recommend Image</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -9501,7 +9639,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[Very High Cost]</value>
+				<value>Risk: Very High - High-Threat Audience: Restricted (Unmitigated)</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9767,6 +9905,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute)</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -9783,6 +9927,12 @@
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.Name</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].count/maxcount/name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[Field Value]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -11677,7 +11827,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[Very High Cost - (>$100/day)]</value>
+				<value>Risk: Very High (Cost >$100/day) - Requires Teardown LCA</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -11733,7 +11883,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[Very High Cost - (>$100/day)]</value>
+				<value>Risk: Very High (Cost - >$100/day) - Requires Teardown LCA</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -11748,16 +11898,16 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
-				<name>Microsoft.Sql/servers/databases/sku.name</name>
+				<name>Microsoft.Databricks/workspaces/sku.name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>currentSku.name</value>
 			</field>
 			<field>
-				<name>Microsoft.Sql/servers/databases/sku.capacity</name>
+				<name>Microsoft.Databricks/workspaces/sku.tier</name>
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
-				<value>currentSku.capacity</value>
+				<value>currentSku.tier</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -11854,9 +12004,6 @@
 	<resource type="Microsoft.DataFactory/factories/providers/Microsoft.Insights/metricDefinitions">
 		<enabled>true</enabled>
 	</resource>
-	<resource type="Microsoft.DataFactory/datafactories">
-		<enabled>true</enabled>
-	</resource>
 	<resource type="Microsoft.DataFactory/datafactories/linkedServices">
 		<enabled>true</enabled>
 	</resource>
@@ -11919,6 +12066,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -12215,6 +12368,20 @@
 	</resource>
 	<resource type="Microsoft.DataLakeAnalytics/accounts">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>High Cost - Restrict where possible</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.DataLakeAnalytics/accounts/transferAnalyticsUnits">
 		<enabled>true</enabled>
@@ -12281,6 +12448,20 @@
 	</resource>
 	<resource type="Microsoft.DataLakeStore/accounts">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Cost: High - Restrict where possible</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.DataLakeStore/accounts/enableKeyVault">
 		<enabled>true</enabled>
@@ -13307,6 +13488,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium - Cost: High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -14586,16 +14773,16 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium - Cost: High</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>name</value>
-			</field>
-			<field>
-				<name>kind</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>[KIND]</value>
 			</field>
 			<field>
 				<name>id</name>
@@ -15569,6 +15756,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -15976,6 +16169,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -16174,6 +16373,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - High-Threat Audience: Restricted - Cost: Very High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -18531,6 +18736,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low (Orphans) - May require Teardown</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -19836,6 +20047,20 @@
 	</resource>
 	<resource type="Microsoft.Logic/workflows">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>UNASSESSED</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.Logic/workflows/run">
 		<enabled>true</enabled>
@@ -20079,6 +20304,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - High-Threat Audience: Restricted - Cost: Very High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -22021,6 +22252,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low - Cost: Potentially Very High</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -23128,6 +23365,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -24394,6 +24637,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium - Cost: High - Recommend SKU</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -24404,6 +24653,12 @@
 				<func>contains</func>
 				<valtype>literal</valtype>
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.OperationalInsights/workspaces/Sku</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Value]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -27306,6 +27561,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low (Orphans) - Restrict as possible - Requires Teardown LCA</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -28328,6 +28589,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium - Cost: Very High</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -28798,7 +29065,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[ACP not required for this resource BUT a Teardown LCA is required]</value>
+				<value>Risk: Low (Orphans) - Requires Teardown LCA</value>
 			</field>
 		</properties>
 	</resource>
@@ -29205,6 +29472,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute)</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -29241,6 +29514,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute)</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -29329,7 +29608,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[May require novel quality restrictions (SKU field not present)]</value>
+				<value>Risk: High - May require novel restrictions (SKU field not present)</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -29796,6 +30075,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -29829,6 +30114,18 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium - Cost: Very High</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
 			</field>
 			<field>
 				<name>Microsoft.Sql/servers/databases/sku.name</name>
@@ -31144,6 +31441,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Medium (Compute) - Cost: High</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -31228,6 +31531,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low - Cost: High for Hot Tiers - Recommend Name, Resource Group</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -31994,7 +32303,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>[Very High Risk]</value>
+				<value>Risk: Very High - High-Threat Audience: Restricted (Unmitigated) - Cost: Very High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -32521,6 +32830,12 @@
 				<value>Succeeded</value>
 			</field>
 			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Low (Ancilliary) - Cost: Low - Recommend Name, Resource Group</value>
+			</field>
+			<field>
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -32773,6 +33088,12 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Crypto/Compute) - Cost: Very High - Recommend Kind when Name not available</value>
 			</field>
 			<field>
 				<name>name</name>
