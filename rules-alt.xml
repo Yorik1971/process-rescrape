@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources version="1.1.13">
+<resources version="1.1.14">
 	<resource type="Microsoft.AAD">
 		<enabled>true</enabled>
 	</resource>
@@ -403,7 +403,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High - Sku.Capacity is recommended</value>
+				<value>Risk: High - Cost: High for premium SKUs - Sku.Capacity is recommended</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -1649,6 +1649,23 @@
 	<resource type="Microsoft.AppConfiguration/locations/notifyNetworkSecurityPerimeterUpdatesAvailable">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.ApplicationMigration">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+		</properties>
+	</resource>
 	<resource type="Microsoft.AppPlatform">
 		<enabled>true</enabled>
 	</resource>
@@ -2166,7 +2183,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High - (SKU = Free or Basic) Restricted for High-Threat Audiences</value>
+				<value>Risk: High - (SKU = Free or Basic) - Cost: Med - Underlying compute resources. Defaults to "Basic" sku when created through the portal. Denied for High-Threat audiences. (Under Review) </value>
 			</field>
 			<field>
 				<name>name</name>
@@ -2275,21 +2292,6 @@
 	<resource type="Microsoft.Automation/automationAccounts/objectDataTypes/fields">
 		<enabled>true</enabled>
 	</resource>
-	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/content">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Automation/automationAccounts/runbooks/content">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/undoEdit">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/operationResults">
-		<enabled>true</enabled>
-	</resource>
 	<resource type="Microsoft.Automation/automationAccounts/runbooks">
 		<enabled>true</enabled>
 		<properties>
@@ -2303,7 +2305,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low - Ancilliary</value>
+				<value>Risk: Low (Ancilliary) - Can be limited to specific language (ie Powershell) to increase friction.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -2330,6 +2332,21 @@
 				<value>global</value>
 			</field>
 		</properties>
+	</resource>
+	<resource type="Microsoft.Automation/automationAccounts/runbooks/content">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/content">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/operationResults">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Automation/automationAccounts/runbooks/draft/undoEdit">
+		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Automation/automationAccounts/runbooks/getCount">
 		<enabled>true</enabled>
@@ -2471,6 +2488,20 @@
 	</resource>
 	<resource type="Microsoft.AVS">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.AVS/register">
 		<enabled>true</enabled>
@@ -2635,7 +2666,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: BANNED - High-Threat Audience: Restricted</value>
+				<value>Risk: BANNED - High-Threat Audience: Restricted - Orphan causes threat to platform availability. Id_202</value>
 			</field>
 		</properties>
 	</resource>
@@ -3696,6 +3727,20 @@
 	</resource>
 	<resource type="Microsoft.BotService/botServices">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.BotService/botServices/createemailsigninurl">
 		<enabled>true</enabled>
@@ -3851,7 +3896,25 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Unknown - Not Assessed</value>
+				<value>Risk: Medium - Cost: Medium - Notes: Costs ~5$/hour for premium. Low skus are ~0.05$/hour</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Sku.name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Name]</value>
 			</field>
         </properties>
 	</resource>
@@ -3894,9 +3957,6 @@
 	<resource type="Microsoft.Cache/redis/linkedServers">
 		<enabled>true</enabled>
 	</resource>
-	<resource type="Microsoft.Cache/redisEnterprise/providers/Microsoft.Insights/metricDefinitions">
-		<enabled>true</enabled>
-	</resource>
 	<resource type="Microsoft.Cache/redis/eventGridFilters">
 		<enabled>true</enabled>
 	</resource>
@@ -3918,6 +3978,47 @@
 	<resource type="Microsoft.Cache/locations/operationsStatus">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.Cache/redisEnterprise">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High - Cost: Very High - Notes: Very high = >40$/hour for some Enterprise skus. Low skus are ~0.1$/hour</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Sku.name</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Name]</value>
+			</field>
+        </properties>
+	</resource>
+	<resource type="Microsoft.Cache/redisEnterprise/providers/Microsoft.Insights/metricDefinitions">
+		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.Cache/redisEnterprise/PrivateEndpointConnectionsApproval">
+		<enabled>true</enabled>
+	</resource>
 	<resource type="Microsoft.Cache/redisEnterprise/privateEndpointConnectionProxies/validate">
 		<enabled>true</enabled>
 	</resource>
@@ -3925,12 +4026,6 @@
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Cache/redisEnterprise/privateEndpointConnectionProxies/operationResults">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Cache/redisEnterprise">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Cache/redisEnterprise/PrivateEndpointConnectionsApproval">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Cache/redisEnterprise/databases">
@@ -4136,6 +4231,20 @@
 	</resource>
 	<resource type="Microsoft.Cdn/profiles">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.Cdn/profiles/CheckResourceUsage">
 		<enabled>true</enabled>
@@ -4550,38 +4659,6 @@
 	</resource>
 	<resource type="Microsoft.ClassicCompute/virtualMachines">
 		<enabled>true</enabled>
-		<properties>
-			<field>
-				<name>provisioningState</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>Succeeded</value>
-			</field>
-			<field>
-				<name>name</name>
-				<func>equals</func>
-				<valtype>field</valtype>
-				<value>osProfile.computername</value>
-			</field>
-			<field>
-				<name>Microsoft.Compute/VirtualMachines/sku.Name</name>
-				<func>equals</func>
-				<valtype>field</valtype>
-				<value>hardwareProfile.vmSize</value>
-			</field>
-			<field>
-				<name>id</name>
-				<func>contains</func>
-				<valtype>literal</valtype>
-				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
-			</field>
-			<field>
-				<name>location</name>
-				<func>notequals</func>
-				<valtype>literal</valtype>
-				<value>global</value>
-			</field>
-		</properties>
 	</resource>
 	<resource type="Microsoft.ClassicCompute/virtualMachines/capture">
 		<enabled>true</enabled>
@@ -8545,7 +8622,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low</value>
+				<value>Risk: Low - Notes: VMs managed with VM specific restrictions</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8583,7 +8660,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - Recommend ImageOffer, ImageId</value>
+				<value>Risk: High (Crypto/Compute) - Cost: High - Notes: Recommend ImageOffer, ImageId</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8735,7 +8812,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - Recommend Name Pattern when associated with VMSS</value>
+				<value>Risk: High (Crypto/Compute) - Cost: High - Notes: Recommend Name Pattern when associated with VMSS</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -8917,7 +8994,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low</value>
+				<value>Risk: Low - Ancilliary - Notes: Not required</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9301,6 +9378,20 @@
 	</resource>
 	<resource type="Microsoft.ConfidentialLedger/ledgers">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.ConfidentialLedger/operations">
 		<enabled>true</enabled>
@@ -9414,7 +9505,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - Recommend Image</value>
+				<value>Risk: High (Crypto/Compute) - Cost: High - Notes: Recommend Image. Name pattern allowed for LOW Threat audiences.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9429,16 +9520,22 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB/cpu</name>
+				<name>Microsoft.ContainerInstance/containerGroups/sku.Name</name>
 				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.Name</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB/cpu</name>
+				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>[memoryInGB cpu]</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.sku/count</name>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.sku</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>[gpu.sku count]</value>
+				<value>[gpu.sku]</value>
 			</field>
 			<field>
 				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.limits.gpu.sku/count</name>
@@ -9575,7 +9672,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Very High - High-Threat Audience: Restricted (Unmitigated)</value>
+				<value>Risk: Restricted (Unmitigated) - Cost Very High - Notes: Denied for High-Threat Audiences</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9838,7 +9935,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute)</value>
+				<value>Risk: High (Crypto/Compute) - Cost: High</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -9857,6 +9954,12 @@
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.Name</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].count</name>
+				<func>lessOrEquals</func>
+				<valtype>literal</valtype>
+				<value>[Field Value]</value>
 			</field>
 			<field>
 				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].count/maxcount/name</name>
@@ -11751,7 +11854,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Very High (Cost \>$100/day) - Under Review. Requires Teardown LCA. May not be grantable for High-threat audiences.</value>
+				<value>Risk: Very High - Cost: Very High (>$100/day) - Notes: Under Review. Requires Teardown LCA. See specific resources in this namespace. Corresponding VMs require highly-permissive policies. May not be grantable for high threat audiences.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -11801,7 +11904,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Very High (Cost - &gt;$100/day) - Requires Teardown LCA. Use with extreme caution. SKU.Tier recommended.</value>
+				<value>Risk: Very High - Cost: Very High (>$100/day) - Under Review. Requires Teardown LCA. SKU.Tier recommended. High-Cost resources that incure costs when saved/orphaned. Treat with extreme caution.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -12285,7 +12388,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>High Cost - Restrict where possible. Not currently assessed.</value>
+				<value>Unassessed - Cost: high - Notes: Restrict where possible.</value>
 			</field>
         </properties>
 	</resource>
@@ -12365,7 +12468,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Cost: High - Restrict where possible. Not currently assessed.</value>
+				<value>Unassessed - Cost: high - Notes: Restrict where possible.</value>
 			</field>
         </properties>
 	</resource>
@@ -12610,7 +12713,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Cost: BLOCKED - Use Recovery Service Vaults instead.</value>
+				<value>BANNED - Notes: Use Recovery Service Vaults instead. Considered only for grandfathered content. Produces Orphans</value>
 			</field>
         </properties>
 	</resource>
@@ -12679,6 +12782,40 @@
 	</resource>
 	<resource type="Microsoft.DataProtection/subscriptions/resourceGroups/providers/locations/fetchCrossRegionRestoreJob">
 		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.DataReplication/replicationFabrics">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
+	</resource>
+	<resource type="Microsoft.DataReplication/replicationVaults">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.DataShare">
 		<enabled>true</enabled>
@@ -13606,8 +13743,39 @@
 	<resource type="Microsoft.DBforPostgreSQL/flexibleServers/tuningOptions/sessionDetails">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.DependencyMap/maps">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
+	</resource>
 	<resource type="Microsoft.DesktopVirtualization">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.DesktopVirtualization/unregister">
 		<enabled>true</enabled>
@@ -14450,6 +14618,20 @@
 	</resource>
 	<resource type="Microsoft.DevTestLab/schedules">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Not Assessed</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.DevTestLab/schedules/Execute">
 		<enabled>true</enabled>
@@ -16312,7 +16494,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - High-Threat Audience: Restricted - Cost: Very High</value>
+				<value>Risk: Very High (Crypto/Compute) - Cost: Very High - Notes: Denied for High-Threat Audience</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -16325,12 +16507,6 @@
 				<func>equals</func>
 				<valtype>field</valtype>
 				<value>sku.name</value>
-			</field>
-			<field>
-				<name>Microsoft.Fabric/capacities/sku.tier</name>
-				<func>equals</func>
-				<valtype>field</valtype>
-				<value>sku.tier</value>
 			</field>
 			<field>
 				<name>id</name>
@@ -16504,6 +16680,50 @@
 	</resource>
 	<resource type="Microsoft.HDInsight/clusters">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: High (Compute) - Cost: Very High</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>field</valtype>
+				<value>ResourceId</value>
+			</field>
+			<field>
+				<name>vmSize</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>computeProfile.roles[*].hardwareProfile.vmSize</value>
+			</field>
+			<field>
+				<name>maxInstanceCount</name>
+				<func>lessOrEquals</func>
+				<valtype>field</valtype>
+				<value>computeProfile.roles[*].autoscale.capacity.maxInstanceCount</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.HDInsight/clusters/getGatewaySettings">
 		<enabled>true</enabled>
@@ -18657,7 +18877,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low (Orphans) - May require Teardown. Recommend Name and Resource Group.</value>
+				<value>Risk: Low - Notes: Easily orphaned, will incure ongoing costs if not torndown properly. May require Teardown. Recommend Name and Resource Group.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -19919,6 +20139,38 @@
 	</resource>
 	<resource type="Microsoft.LoadTestService">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Restricted - Cost: Very High - Notes: Arbitrary compute, known as Azure Load Testing or Azure App Testing</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>field</valtype>
+				<value>ResourceId</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.LoadTestService/checkNameAvailability">
 		<enabled>true</enabled>
@@ -19934,6 +20186,38 @@
 	</resource>
 	<resource type="Microsoft.LoadTestService/loadTests">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Restricted - Cost: Very High - Notes: Arbitrary compute, known as Azure Load Testing or Azure App Testing</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>field</valtype>
+				<value>ResourceId</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.LoadTestService/loadtests/startTest">
 		<enabled>true</enabled>
@@ -19964,6 +20248,41 @@
 	</resource>
 	<resource type="Microsoft.LoadTestService/loadTestProfileMappings">
 		<enabled>true</enabled>
+	</resource>
+	<resource type="Microsoft.LoadTestService/playwriteWorkspaces">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Restricted - Cost: Very High - Notes: Arbitrary compute, known as Azure Load Testing or Azure App Testing</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>field</valtype>
+				<value>ResourceId</value>
+			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.LoadTestService/testProfiles">
 		<enabled>true</enabled>
@@ -20253,7 +20572,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - High-Threat Audience: Restricted - Cost: Very High. Workspaces sku can have transient "Exists" : "False" during  deployment. Denied for High-Threat audience.</value>
+				<value>Risk: Very High (Crypto/Compute) - Cost: Very High - Notes: - Workspaces sku can have transient "Exists" : "False" during deployment. Denied for High-Threat audience.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -20824,13 +21143,27 @@
 	<resource type="Microsoft.Maintenance/configurationAssignments/maintenanceScope/InGuestPatch">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.Maintenance/maintenanceConfigurations">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Not Assessed</value>
+			</field>
+        </properties>
+	</resource>
 	<resource type="Microsoft.Maintenance/maintenanceConfigurations/maintenanceScope/InGuestPatch">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Maintenance/configurationAssignments">
-		<enabled>true</enabled>
-	</resource>
-	<resource type="Microsoft.Maintenance/maintenanceConfigurations">
 		<enabled>true</enabled>
 	</resource>
 	<resource type="Microsoft.Maintenance/updates">
@@ -21375,6 +21708,20 @@
 	</resource>
 	<resource type="Microsoft.Migrate">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Not Assessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.Migrate/register">
 		<enabled>true</enabled>
@@ -21949,6 +22296,23 @@
 	<resource type="microsoft.monitor/investigations">
 		<enabled>true</enabled>
 	</resource>
+	<resource type="Microsoft.mySqlDiscovery">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Not Assessed</value>
+			</field>
+        </properties>
+	</resource>
 	<resource type="Microsoft.NetApp">
 		<enabled>true</enabled>
 	</resource>
@@ -22193,7 +22557,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low (Orphans) - May require Teardown - Cost: Potentially Very High (example: Gateways). Recommend Name and Resource Group.</value>
+				<value>Risk: Low - Cost: Very High for some resource types(ex: Gateways). Notes: May require tear-down LCA. Recommend Name and Resource Group. Some high-cost resources, low risk otherwise.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -22999,7 +23363,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Orphans) May require tear-down</value>
+				<value>Risk: High (Orphans) - Notes: May require tear-down</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -23366,7 +23730,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low. Recommend Name and Resource Group.</value>
+				<value>Risk: Low - Notes: Recommend Name and Resource Group.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -24224,6 +24588,20 @@
 	</resource>
 	<resource type="Microsoft.OffAzure">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Not Assessed</value>
+			</field>
+        </properties>
 	</resource>
 	<resource type="Microsoft.OffAzure/register">
 		<enabled>true</enabled>
@@ -24604,7 +24982,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Medium - Cost: High - Recommend SKU. Workspaces sku can have transient "Exists" : "False" during deployment</value>
+				<value>Risk: Medium - Cost: High - Notes: Recommend SKU. Workspaces sku can have transient "Exists" : "False" during deployment</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -27474,6 +27852,20 @@
 	</resource>
 	<resource type="Microsoft.Quantum/Workspaces">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Banned - Cost: Extremely High - Notes: Contact the SRT@skillable.com if you require this resource for any purpose. Do not expect a fast turn around. Cost can be >$100USD per execution</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.Quantum/Workspaces/regenerateKey">
 		<enabled>true</enabled>
@@ -27536,7 +27928,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low (Orphans) - Restrict as possible - Requires Teardown LCA. Easily orphaned, will incure ongoing costs if not torn down properly.</value>
+				<value>Risk: Low (Orphans) - Cost: Low - Notes: Requires Teardown LCA. Easily orphaned, will incure ongoing costs if not torn down properly.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -28590,7 +28982,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Medium - Cost: Very High</value>
+				<value>Risk: Medium - Cost: Very High - Notes: >8$/hour for high skus.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -29071,7 +29463,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low (Orphans) - Requires Teardown LCA</value>
+				<value>Risk: Low (Orphans) - Notes: Requires Teardown LCA</value>
 			</field>
 		</properties>
 	</resource>
@@ -29323,6 +29715,20 @@
 	</resource>
 	<resource type="Microsoft.ServiceBus/namespaces">
 		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Risk: Unassessed</value>
+			</field>
+		</properties>
 	</resource>
 	<resource type="Microsoft.ServiceBus/namespaces/authorizationRules">
 		<enabled>true</enabled>
@@ -29602,7 +30008,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - Under Review - May require novel restrictions (SKU field not present)</value>
+				<value>Risk: High (Crypto/Compute) - Under Review - Notes: May require novel restrictions (SKU field not present)</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -30101,7 +30507,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Medium (Compute) - Cost: Very High. Master DB's can have sku.name "System", sku.tier: "System", sku.capacity: 0.</value>
+				<value>Risk: Medium (Compute) - Cost: Very High. - Notes: Master DB's can have sku.name "System", sku.tier: "System", sku.capacity: 0.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -31458,7 +31864,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Medium (Compute) - Cost: High</value>
+				<value>Risk: Medium (Compute) - Cost: High - Notes: Recommend sqlInstanceSettings.maxServerMemoryMB</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -31477,6 +31883,12 @@
 				<func>contains</func>
 				<valtype>field</valtype>
 				<value>sqlImageSku</value>
+			</field>
+			<field>
+				<name>Microsoft.SqlVirtualMachine/sqlInstanceSettings/maxServerMemoryMB</name>
+				<func>lessOrEquals</func>
+				<valtype>literal</valtype>
+				<value>[Max Server Memory MB]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -31544,7 +31956,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low - (Teardown LCA required) Cost: High for Hot Tiers - Recommend Name, Resource Group</value>
+				<value>Risk: Low - Cost: High (for Hot Tiers) - Notes: Requires Teardown LCA. Recommend Name, Resource Group</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -32081,7 +32493,31 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Not Assessed</value>
+				<value>Risk: Medium (Compute)</value>
+			</field>
+			<field>
+				<name>name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>name</value>
+			</field>
+			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.StreamAnalytics/streamingjobs/sku.Name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>[SKU Name]</value>
+			</field>
+			<field>
+				<name>Microsoft.StreamAnalytics/streamingjobs/sku.Capacity</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>[SKU Capacity]</value>
 			</field>
 		</properties>
 	</resource>
@@ -32365,7 +32801,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Very High - High-Threat Audience: Restricted (Unmitigated) - Cost: Very High</value>
+				<value>Risk: Restricted - Cost: Very High - Notes: High-Risk, Denied for High-Threat audience</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -32889,7 +33325,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: Low (Ancilliary) - Cost: Low - Recommend Name, Resource Group</value>
+				<value>Risk: Low (Ancilliary) - Cost: Low - Notes: Recommend Name, Resource Group. See Microsoft.Web/serverfarms for underlying compute.</value>
 			</field>
 			<field>
 				<name>name</name>
@@ -33143,7 +33579,7 @@
 				<name>NOTE</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
-				<value>Risk: High (Crypto/Compute) - Cost: Very High - Recommend Kind when Name not available (eg: function apps)</value>
+				<value>Risk: High (Crypto/Compute) - Cost: Very High - Notes: Recommend Kind when Name not available (eg: function apps)</value>
 			</field>
 			<field>
 				<name>name</name>
