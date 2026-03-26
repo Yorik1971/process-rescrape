@@ -309,7 +309,8 @@ function Access-AzAccount {
 	try {
 		Write-log -toConsole $Details -id 60 -msg "Attempting AZ Login (Web): $($inSubs)."
 		
-#		Write-Host "🔑 Launching Web Login for Azure. Use the Temporary Access Pass (TAP) Token if requested. Otherwise, use the provided password..."
+		#		Write-Host "🔑 Launching Web Login for Azure. Use the Temporary Access Pass (TAP) Token if requested. Otherwise, use the provided password..."
+		Update-AzConfig -DefaultSubscriptionForLogin $inSubs
 		$context = Connect-AzAccount
 		
 		$tnnt = $context.Context.Tenant.id
@@ -1000,7 +1001,7 @@ function Get-ScriptDirectory {
 # This script requires -Module Az
 
 # Script Version
-$myVer = "1.1.5"
+$myVer = "1.1.6"
 
 # Default the Verbosity of messages to NOT
 if ([string]::IsNullOrEmpty($Details)) { $Details = $false }
