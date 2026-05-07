@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<resources version="1.1.14">
+<resources version="1.1.15">
 	<resource type="Microsoft.ApiManagement/service">
 		<enabled>true</enabled>
 		<properties>
@@ -330,6 +330,12 @@
 				<valtype>literal</valtype>
 				<value>[vmSize]</value>
 			</field>
+			<field>
+				<name>location</name>
+				<func>notequals</func>
+				<valtype>literal</valtype>
+				<value>global</value>
+			</field>
         </properties>
 	</resource>
 	<resource type="Microsoft.BotService/botServices">
@@ -381,6 +387,18 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[SKU Name]</value>
+			</field>
+			<field>
+				<name>Sku.family</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Family]</value>
+			</field>
+			<field>
+				<name>Sku.capacity</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Capacity]</value>
 			</field>
         </properties>
 	</resource>
@@ -436,6 +454,40 @@
 			</field>
         </properties>
 	</resource>
+	<resource type="Microsoft.ChangeAnalysis">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
+	</resource>
+	<resource type="Microsoft.Chaos/experiments">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
+	</resource>
 	<resource type="Microsoft.CognitiveServices/accounts">
 		<enabled>true</enabled>
 		<properties>
@@ -462,6 +514,18 @@
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>sku.Name</value>
+			</field>
+			<field>
+				<name>Microsoft.CognitiveServices/accounts/sku.Capacity</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>sku.Capacity</value>
+			</field>
+			<field>
+				<name>Microsoft.CognitiveServices/accounts/sku.Tier</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>sku.Tier</value>
 			</field>
 			<field>
 				<name>kind</name>
@@ -610,6 +674,12 @@
 				<value>osProfile.computername</value>
 			</field>
 			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
 				<name>Microsoft.Compute/VirtualMachines/sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -657,6 +727,12 @@
 				<value>name</value>
 			</field>
 			<field>
+				<name>id</name>
+				<func>contains</func>
+				<valtype>literal</valtype>
+				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
 				<name>Microsoft.Compute/virtualMachineScaleSets/sku.Name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
@@ -673,12 +749,6 @@
 				<func>lessOrEquals</func>
 				<valtype>field</valtype>
 				<value>sku.capacity</value>
-			</field>
-			<field>
-				<name>id</name>
-				<func>contains</func>
-				<valtype>literal</valtype>
-				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -739,22 +809,22 @@
 				<value>sku.Name</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.memoryInGB/cpu</name>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.limits.gpu.sku</name>
 				<func>lessOrEquals</func>
-				<valtype>field</valtype>
-				<value>[memoryInGB cpu]</value>
-			</field>
-			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.requests.gpu.sku</name>
-				<func>equals</func>
 				<valtype>field</valtype>
 				<value>[gpu.sku]</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.limits.gpu.sku/count</name>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.limits.gpu.count</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>[gpu.sku count]</value>
+				<value>[gpu.count]</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerInstance/containerGroups/containers[*].resources.limits.cpu</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>[cpu limits]</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -786,16 +856,16 @@
 				<value>name</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerRegistry/registries/sku.Name</name>
-				<func>equals</func>
-				<valtype>field</valtype>
-				<value>sku.Name</value>
-			</field>
-			<field>
 				<name>id</name>
 				<func>contains</func>
 				<valtype>literal</valtype>
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerRegistry/registries/sku.Name</name>
+				<func>equals</func>
+				<valtype>field</valtype>
+				<value>sku.Name</value>
 			</field>
 			<field>
 				<name>location</name>
@@ -845,7 +915,13 @@
 				<value>[Field Value]</value>
 			</field>
 			<field>
-				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].count/maxcount/name</name>
+				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].maxcount</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[Field Value]</value>
+			</field>
+			<field>
+				<name>Microsoft.ContainerService/managedClusters/agentPoolProfiles[*].name</name>
 				<func>equals</func>
 				<valtype>literal</valtype>
 				<value>[Field Value]</value>
@@ -1188,6 +1264,23 @@
 			</field>
 		</properties>
 	</resource>
+	<resource type="Microsoft.DevTestLab/schedules">
+		<enabled>true</enabled>
+		<properties>
+			<field>
+				<name>provisioningState</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Succeeded</value>
+			</field>
+			<field>
+				<name>NOTE</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>Unassessed</value>
+			</field>
+        </properties>
+	</resource>
 	<resource type="Microsoft.DocumentDB/databaseAccounts">
 		<enabled>true</enabled>
 		<properties>
@@ -1312,7 +1405,7 @@
 				<name>name</name>
 				<func>equals</func>
 				<valtype>field</valtype>
-				<value>name</value>
+				<value>resourceName</value>
 			</field>
 			<field>
 				<name>Microsoft.Fabric/capacities/sku.name</name>
@@ -2214,6 +2307,12 @@
 				<value>/resourceGroups/[RESOURCE GROUP NAME]/</value>
 			</field>
 			<field>
+				<name>Microsoft.ServiceFabric/managedclusters/sku</name>
+				<func>equals</func>
+				<valtype>literal</valtype>
+				<value>[SKU Value]</value>
+			</field>
+			<field>
 				<name>location</name>
 				<func>notequals</func>
 				<valtype>literal</valtype>
@@ -2645,23 +2744,6 @@
 				<func>notequals</func>
 				<valtype>literal</valtype>
 				<value>global</value>
-			</field>
-		</properties>
-	</resource>
-	<resource type="Microsoft.DevTestLab/Schedules">
-		<enabled>true</enabled>
-		<properties>
-			<field>
-				<name>provisioningState</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>Succeeded</value>
-			</field>
-			<field>
-				<name>NOTE</name>
-				<func>equals</func>
-				<valtype>literal</valtype>
-				<value>Risk: Not Assessed</value>
 			</field>
 		</properties>
 	</resource>

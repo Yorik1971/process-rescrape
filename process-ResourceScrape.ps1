@@ -176,28 +176,6 @@ function Add-headers {
 	return $retHead
 }
 
-#function Add-propElement {
-#	[CmdletBinding()]
-#	param
-#	(
-#		$name,
-#		$type,
-#		$field
-#	)
-#	
-#	$retProp = ""
-#	
-#	if ($type -eq "contains" -or $type -eq "in") {
-#		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": [`""
-#		foreach ($item in $name) { $retProp += "`"$item`"" }
-#		$retProp += "`"    ]`n            }"
-#	} else {
-#		$retProp += ",`n            {`n                `"field`": `"$($field)`",`n                `"$($type)`": `"$($name)`"`n            }"
-#	}
-#	
-#	return $retProp
-#}
-
 function Set-acp {
 	[CmdletBinding()]
 	param
@@ -219,73 +197,61 @@ function Set-acp {
 		}
 		
 		# Find the row.ResourceType in the rules file
-#		$cnt = 0
-#		for ($x = 0; $x -lt $rules.resources.resource.count; $x++) {
-#			$rule = $rules.resources.resource[$x]
-			
-#			if ($rule.type -eq $row.ResourceType) {
-				Write-log -toConsole $Details -id 68 -msg "Rule has been found for $($rule.type).`n"
-				# only process the rule if it has been enabled. Otherwise, ignore it
-#				if ($rule.enabled -eq "true") {
-					Write-log -toConsole $Details -id 69 -msg "Rule is enabled.`n"
-					# Check to see if any properties exist for this rule
-					if ($rule.properties -ne $null) {
-						Write-log -toConsole $Details -id 70 -msg "This rule has properties.`n"
-						
-						$elem = "               {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
-						$elem += "`"$($rule.type)`"`n                        },`n"
-						for ($x = 0; $x -lt $rule.properties.field.count; $x++) {
-							if ((-not ($rule.properties.field.name -contains "provisioningstate")) -or ($rule.properties.field[0].value -match "Succeeded")) {
-								if (($x -eq 0) -and (($rule.properties.field[0].name -match "provisioningState") -and ($rule.properties.field[0].value -match "Succeeded"))) {
-									$x++
-								}
-								$elem += "                        {`n                            `"field`": `"$($rule.properties.field[$x].name)`",`n                            `"$($rule.properties.field[$x].func)`": "
-								
-								if ($rule.properties.field[$x].func -eq "in") {
-									# Format the list of values on separate lines
-									$elem += "[`n"
-									$arrValues = $rule.properties.field[$x].value.split(",")
-									for ($y = 0; $y -lt $arrValues.Count - 1; $y++) {
-										$outElem = $arrValues[$y]
-										if ($rule.properties.field[$x].valtype -eq "field") {
-											$splitElem = $arrValues[$y].split(".")
-											$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
-										}
-										$elem += "                                `"$($arrValues[$y])`",`n"
-									}
-									# Remove the last comma
-									$elem = $elem.Substring(0, $elem.Length - 1)
-									# close the list of values
-									$elem += "                            ]`n                        },`n"
-								} else {
-									$outElem = $rule.properties.field[$x].value
-									if ($rule.properties.field[$x].valtype -eq "field") {
-										$splitElem = $rule.properties.field[$x].value.split(".")
-										$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
-									}
-									$elem += "`"$($outElem)`"`n                        `},`n"
-								}
-								if (-not $arrElems.Contains($elem)) { [void]$arrElems.Add($elem) }
-							}
-						}
-						$elem = $elem.Substring(0, $elem.LastIndexOf(","))
-						$elem += "`n                    ]`n                },`n"
-					} else {
-						# Add the element without properties
-						Write-log -toConsole $Details -id 70 -msg "This rule does not have properties.`n"
-						if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
+		Write-log -toConsole $Details -id 68 -msg "Rule has been found for $($rule.type).`n"
+		# only process the rule if it has been enabled. Otherwise, ignore it
+		Write-log -toConsole $Details -id 69 -msg "Rule is enabled.`n"
+		# Check to see if any properties exist for this rule
+		if ($rule.properties -ne $null) {
+			Write-log -toConsole $Details -id 70 -msg "This rule has properties.`n"
+				
+			$elem = "               {`n                    `"allOf`": [`n                        {`n                            `"field`": `"type`",`n                            `"equals`": "
+			$elem += "`"$($rule.type)`"`n                        },`n"
+			for ($x = 0; $x -lt $rule.properties.field.count; $x++) {
+				if ((-not ($rule.properties.field.name -contains "provisioningstate")) -or ($rule.properties.field[0].value -match "Succeeded")) {
+					if (($x -eq 0) -and (($rule.properties.field[0].name -match "provisioningState") -and ($rule.properties.field[0].value -match "Succeeded"))) {
+						$x++
 					}
+					$elem += "                        {`n                            `"field`": `"$($rule.properties.field[$x].name)`",`n                            `"$($rule.properties.field[$x].func)`": "
 					
-#					break
-#				}
-#			}
-#		}
+					if ($rule.properties.field[$x].func -eq "in") {
+						# Format the list of values on separate lines
+						$elem += "[`n"
+						$arrValues = $rule.properties.field[$x].value.split(",")
+						for ($y = 0; $y -lt $arrValues.Count - 1; $y++) {
+							$outElem = $arrValues[$y]
+							if ($rule.properties.field[$x].valtype -eq "field") {
+								$splitElem = $arrValues[$y].split(".")
+								$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
+							}
+							$elem += "                                `"$($arrValues[$y])`",`n"
+						}
+						# Remove the last comma
+						$elem = $elem.Substring(0, $elem.Length - 1)
+						# close the list of values
+						$elem += "                            ]`n                        },`n"
+					} else {
+						$outElem = $rule.properties.field[$x].value
+						if ($rule.properties.field[$x].valtype -eq "field") {
+							$splitElem = $rule.properties.field[$x].value.split(".")
+							$outElem = $props."$($splitElem[0])"."$($splitElem[1])"
+						}
+						$elem += "`"$($outElem)`"`n                        `},`n"
+					}
+					if (-not $arrElems.Contains($elem)) { [void]$arrElems.Add($elem) }
+				}
+			}
+			$elem = $elem.Substring(0, $elem.LastIndexOf(","))
+			$elem += "`n                    ]`n                },`n"
+		} else {
+			# Add the element without properties
+			Write-log -toConsole $Details -id 70 -msg "This rule does not have properties.`n"
+			if (-not $typeElems.Contains($rule.type)) { [void]$typeElems.Add($rule.type) }
+		}
 	} else {
 		Write-log -toConsole $Details -id 9 -msg "ERROR: Could not find the rules file. File: $($rules)`n"
 		$elem = ""
 	}
 	
-	#	return $arrElems
 	return $elem
 }
 
